@@ -4,6 +4,7 @@ import time
 import flask
 import logging
 import multiprocessing
+import queue
         
 class OAuthClient(object):
     """
@@ -36,17 +37,19 @@ class OAuthClient(object):
         token = data['access_token']
         refresh_token = data['refresh_token']
     """
-    __idp_url = "https://id.athera.io/"
     __authorize_endpoint = "authorize"
     __fetch_token_endpoint = "oauth/token"
     __callback_server_url = "http://localhost:5000/"
     __redirect_endpoint = "callback"
     __token_granted_endpoint = "complete"
+    __idp_url = "https://id.athera.io"
+    __idp_audience = "https://public.athera.io"
 
     def __init__(self, 
             auth_client_id, 
             auth_client_secret, 
-            idp_url=__idp_url):
+            idp_url=__idp_url,
+            idp_audience=__idp_audience):
         super(OAuthClient, self).__init__()
         self.logger = logging.getLogger("AuthClient")
         self.auth_client_id = auth_client_id 
@@ -54,6 +57,8 @@ class OAuthClient(object):
         self.app = None
         self.server = None
         self.idp_url = idp_url
+        self.idp_audience = idp_audience
+        self.logger.info("Using {} {}".format(self.idp_url, self.idp_audience))
 
     def start_callback_server(self):
         self.logger.info("Setup CallbackServer")
@@ -92,10 +97,10 @@ class OAuthClient(object):
             scope="offline_access",
         )
 
-        self.logger.info("Authorizing OAuth Session: %s", oauth_session)
+        self.logger.info("Authorizing OAuth Session")
         authorization_url, state = oauth_session.authorization_url(
             url=self.idp_url + self.__authorize_endpoint,
-            audience='https://public.elara.io'
+            audience=self.idp_audience
         )
         return authorization_url
 
@@ -117,14 +122,14 @@ class OAuthClient(object):
         token = oauth_session.refresh_token(
             token_url=self.idp_url + self.__fetch_token_endpoint, 
             refresh_token=refresh_token,
-            audience='https://public.elara.io',
+            audience=self.idp_audience,
             **extra
         )
         self.logger.info("Refreshed token")
         return token
 
     def wait_for_auth(self):
-        self.logger.info("Waiting for token")
+        self.logger.info("Waiting for token...")
         try:
             token = self.queue.get(timeout=60)
             self.logger.info("Got token")
@@ -132,16 +137,18 @@ class OAuthClient(object):
             time.sleep(1)
             self.stop_callback_server()
             return token
-        except multiprocessing.Queue.Empty:
+        except queue.Empty:
             self.logger.info("Timeout")
             return None
+        except KeyboardInterrupt:
+            self.logger.info("Canceled")
+            return None
+
 
     def route_callback(self, *args):
         """
         Runs in the Flask thread
         """
-        self.logger.info("callback")
-
         oauth_session = OAuth2Session(
             client_id=self.auth_client_id, 
             redirect_uri=self.__callback_server_url + self.__token_granted_endpoint,
