@@ -1,5 +1,5 @@
 import requests
-from athera.api.common import headers, api_debug
+from athera.common import headers, api_debug
 
 route_jobs     = "/compute/jobs"
 route_job      = "/compute/jobs/{job_id}"
