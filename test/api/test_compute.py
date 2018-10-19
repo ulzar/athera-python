@@ -250,56 +250,56 @@ class ComputeTest(unittest.TestCase):
         )
         self.assertEqual(response.status_code, codes.forbidden)
 
-    def test_start_and_stop_job(self):
-        """ Positive test """
-        payload = compute.make_job_request(
-            environment.ATHERA_API_TEST_USER_ID, 
-            environment.ATHERA_API_TEST_GROUP_ID, 
-            environment.ATHERA_API_TEST_COMPUTE_APP_ID, 
-            environment.ATHERA_API_TEST_COMPUTE_FILE_PATH, 
-            "test_start_and_stop_job_{}".format(hash(self)), 
-            1, 2, 1, 
-            environment.ATHERA_API_TEST_REGION, 
-            compute_arguments,
-        )
-        response = compute.create_job(
-            environment.ATHERA_API_TEST_BASE_URL,
-            environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
-            payload,
-       )
-        self.assertEqual(response.status_code, codes.ok)
-        job_data = response.json()
-        job_id = job_data['id']
+    # def test_start_and_stop_job(self):
+    #     """ Positive test """
+    #     payload = compute.make_job_request(
+    #         environment.ATHERA_API_TEST_USER_ID, 
+    #         environment.ATHERA_API_TEST_GROUP_ID, 
+    #         environment.ATHERA_API_TEST_COMPUTE_APP_ID, 
+    #         environment.ATHERA_API_TEST_COMPUTE_FILE_PATH, 
+    #         "test_start_and_stop_job_{}".format(hash(self)), 
+    #         1, 2, 1, 
+    #         environment.ATHERA_API_TEST_REGION, 
+    #         compute_arguments,
+    #     )
+    #     response = compute.create_job(
+    #         environment.ATHERA_API_TEST_BASE_URL,
+    #         environment.ATHERA_API_TEST_GROUP_ID,
+    #         environment.ATHERA_API_TEST_TOKEN,
+    #         payload,
+    #    )
+    #     self.assertEqual(response.status_code, codes.ok)
+    #     job_data = response.json()
+    #     job_id = job_data['id']
 
-        # Abort! Abort!
-        response = compute.stop_job(
-            environment.ATHERA_API_TEST_BASE_URL,
-            environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
-            job_id
-        )
+    #     # Abort! Abort!
+    #     response = compute.stop_job(
+    #         environment.ATHERA_API_TEST_BASE_URL,
+    #         environment.ATHERA_API_TEST_GROUP_ID,
+    #         environment.ATHERA_API_TEST_TOKEN,
+    #         job_id
+    #     )
         
-        self.assertEqual(response.status_code, codes.ok)
+    #     self.assertEqual(response.status_code, codes.ok)
         
-        # Wait for CANCELED, should be pretty instant
-        timeout = 60 # 1 minute
-        wait_period = 10
-        while timeout:
-            response = compute.get_job(
-                environment.ATHERA_API_TEST_BASE_URL,
-                environment.ATHERA_API_TEST_GROUP_ID,
-                environment.ATHERA_API_TEST_TOKEN,
-                job_id,
-            )
-            self.assertEqual(response.status_code, codes.ok)
-            job_data = response.json()
-            self.assertIn("id", job_data)
-            self.assertEqual(job_id, job_data['id'])
-            job_status = job_data['status'] 
-            if job_status == "CANCELED":
-                break
+    #     # Wait for CANCELED, should be pretty instant
+    #     timeout = 60 # 1 minute
+    #     wait_period = 10
+    #     while timeout:
+    #         response = compute.get_job(
+    #             environment.ATHERA_API_TEST_BASE_URL,
+    #             environment.ATHERA_API_TEST_GROUP_ID,
+    #             environment.ATHERA_API_TEST_TOKEN,
+    #             job_id,
+    #         )
+    #         self.assertEqual(response.status_code, codes.ok)
+    #         job_data = response.json()
+    #         self.assertIn("id", job_data)
+    #         self.assertEqual(job_id, job_data['id'])
+    #         job_status = job_data['status'] 
+    #         if job_status == "CANCELED":
+    #             break
             
-            print("{}s {}".format(timeout, job_status))
-            timeout -= wait_period
-            time.sleep(wait_period)
+    #         print("{}s {}".format(timeout, job_status))
+    #         timeout -= wait_period
+    #         time.sleep(wait_period)
