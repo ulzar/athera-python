@@ -1,5 +1,5 @@
 import requests
-from athera.common import headers, api_debug
+from common import headers, api_debug
 
 route_orgs           = "/orgs"
 route_group          = "/groups/{group_id}"

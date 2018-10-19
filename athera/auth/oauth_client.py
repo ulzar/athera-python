@@ -4,8 +4,12 @@ import time
 import flask
 import logging
 import multiprocessing
-import queue
-        
+import sys
+if sys.version_info[0] < 3:  # pragma: no cover
+    import Queue as queue
+else:  # pragma: no cover
+    import queue
+
 class OAuthClient(object):
     """
     A helper class to perform OAuth2 authentication in Athera.
@@ -42,7 +46,7 @@ class OAuthClient(object):
     __callback_server_url = "http://localhost:5000/"
     __redirect_endpoint = "callback"
     __token_granted_endpoint = "complete"
-    __idp_url = "https://id.athera.io"
+    __idp_url = "https://id.athera.io/"
     __idp_audience = "https://public.athera.io"
 
     def __init__(self, 
