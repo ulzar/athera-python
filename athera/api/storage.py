@@ -1,5 +1,5 @@
 import requests
-from athera.common import headers, api_debug
+from common import headers, api_debug
 
 route_driver  = "/storage/driver"
 route_drivers  = "/storage/drivers"
@@ -67,7 +67,7 @@ def rescan_driver(base_url, group_id, token, driver_id):
     Response: [403 Forbidden] Incorrect or inaccessible group_id
     """
     body = {
-        "type": "rescan"
+        "type": "RESCAN"
     }
     url = base_url + route_driver_id.format(driver_id=driver_id)
     response = requests.post(url, headers=headers(group_id, token), json=body)
@@ -80,7 +80,7 @@ def dropcache_driver(base_url, group_id, token, driver_id):
     Response: [403 Forbidden] Incorrect or inaccessible group_id
     """
     body = {
-        "type": "drop"
+        "type": "DROP"
     }
     url = base_url + route_driver_id.format(driver_id=driver_id)
     response = requests.post(url, headers=headers(group_id, token), json=body)
