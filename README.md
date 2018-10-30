@@ -36,7 +36,7 @@ orgs = get_orgs("<base_url>", "<token>")
 
 base_url is a constant:
 
-`https://api.athera.io/`
+`https://api.athera.io/api/v1/`
 
 It is provided as an argument to function calls to allow for future flexibility.
 
