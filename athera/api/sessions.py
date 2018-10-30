@@ -1,5 +1,5 @@
 import requests
-from common import headers, api_debug
+from athera.api.common import headers, api_debug
 
 route_user_sessions = "/users/{user_id}/sessions"
 route_session       = "/sessions/{session_id}"
