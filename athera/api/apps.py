@@ -1,5 +1,5 @@
 import requests
-from common import headers, api_debug
+from athera.api.common import headers, api_debug
 
 route_app_families = "/families"
 route_app          = "/apps/{app_id}"
