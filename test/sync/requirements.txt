@@ -1,0 +1,3 @@
+google-cloud-storage
+grpcio
+nose2
