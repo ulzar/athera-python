@@ -98,7 +98,7 @@ class OAuthClient(object):
         oauth_session = OAuth2Session(
             client_id=self.auth_client_id, 
             redirect_uri=self.__callback_server_url + self.__redirect_endpoint,
-            scope="offline_access",
+            scope=u"offline_access",
         )
 
         self.logger.info("Authorizing OAuth Session")
