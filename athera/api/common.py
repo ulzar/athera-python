@@ -1,6 +1,7 @@
 """
 Helpers for the Athera API
 """
+import os
 
 def headers(group_id, token):
     """
@@ -13,12 +14,13 @@ def headers(group_id, token):
 
 
 def api_debug(func):
-    def wrapper(*args, **kwargs):
-        response = func(*args, **kwargs)
-        #print(response.request.url)
-        #print(response.request.headers)
-        #print(response.request.body)
-        print("{} {} [{}]".format(response.request.method, response.url, response.status_code))
-        return response
-    return wrapper
+    if os.getenv("ATHERA_API_DEBUG"):
+        def wrapper(*args, **kwargs):
+            response = func(*args, **kwargs)
+            print("Request: {} {} [{}]".format(response.request.method, response.url, response.status_code))
+            print("Body: {}".format(response.request.body))
+            return response
+        return wrapper
+    else:
+        return func
     

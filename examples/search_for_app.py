@@ -53,11 +53,17 @@ def main():
         logger.fatal("ATHERA_API_TOKEN not set in env")
         sys.exit(1)
 
+    # Show the token expiry
+    token_helper = common.TokenHelper(token)
+    logger.info("Token expires {}".format(token_helper.get_expiry_string()))
+
     # API calls all need an active group to define the 'Context' of the request. We only care about the top-level groups, orgs. Ask for user input.
     selector = common.GroupSelector(logger, base_url, token)
     group_id = selector.get_org()
     if not group_id:
         sys.exit(2)
+
+    logger.info("Selected {}".format(group_id))
 
     # Feed this into the class which will query the app_families endpoint
     searcher = AppSearcher(logger, base_url, group_id, token)

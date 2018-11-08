@@ -5,6 +5,8 @@ A collection of functions and helpers common to multiple examples
 import os
 import json
 import logging
+import base64
+from datetime import datetime
 
 
 from six.moves import input
@@ -39,9 +41,11 @@ def get_token_from_env():
 
 def get_base_url():
     """ 
-    Provided as an argument to api calls to aid future expansion
+    Provided as an argument to api calls to aid future expansion.
+
+    Dont put a trailing '/' or POST requests do strange redirects.
     """
-    return "https://api.athera.io/api/v1/"
+    return "https://api.athera.io/api/v1"
     
 
 def convert_response(response):
@@ -53,6 +57,12 @@ def convert_response(response):
     except:
         return None
 
+
+def select_region(logger, question):
+    # Available regions at time of writing - TODO add API endpoint to provide lookup
+    choices = ("europe-west1", "us-west1", "australia-southeast1")
+    region_index_unused, region_name = SelectionHelper(logger, choices, question)()
+    return region_name
 
 
 class GroupSelector(object):
@@ -68,6 +78,9 @@ class GroupSelector(object):
         self.token = token
     
     def get_org(self):
+        """
+        Get a top-level group, an Org.
+        """
         self.logger.info("Getting orgs for user")
         orgs_response = groups.get_orgs(self.base_url, self.token)
         if orgs_response.status_code != 200:
@@ -90,9 +103,37 @@ class GroupSelector(object):
         # We have found multiple options so begin the selection process.
         choices = [x['name'] for x in orgs]
         org_index, org_name = SelectionHelper(self.logger, choices, "Select an Org")()
-        self.logger.info("Selected {}".format(org_name))
         
         return orgs[org_index]['id']
+
+
+    def get_leaf_group(self, parent_id):
+        """
+        Walk the context tree from the parent group, until a group is selected with no descendents.
+        """
+        children_response = groups.get_group_children(self.base_url, parent_id, self.token)
+        if children_response.status_code != 200:
+            self.logger.error("Failed getting children for group {}".format(parent_id))
+            return None
+
+        children = convert_response(children_response)
+        if 'groups' not in children:            
+            self.logger.error("Missing groups data")
+            return None
+        
+        # json data in contained within the 'groups' object, so extract that
+        children = children['groups']
+
+        if len(children) == 0:
+            # No children. Its a leaf
+            return parent_id
+
+        choices = [x['name'] for x in children]
+        child_index, child_name = SelectionHelper(self.logger, choices, "Select an sub-group")()
+        self.logger.info("Selected {}".format(child_name))
+        
+        # Recurse into selected child group
+        return self.get_leaf_group(children[child_index]['id'])
 
 
 class SelectionHelper(object):
@@ -138,3 +179,30 @@ class SelectionHelper(object):
                 self.logger.warning("Please enter a number from 1 to {}".format(len(self.choices)))
             
         return int(i)-1, selection
+
+
+class TokenHelper(object):
+    """
+    Functions to extract information from the user's JWT token.
+    """
+    def __init__(self, token):
+        super(TokenHelper, self).__init__()
+        header, payload, signature = token.split(".")
+        self.decoded = json.loads(base64.b64decode(payload).decode("utf-8"))
+
+    def get_user_id(self):
+        """ 
+        Searches for two metadata keys for backward compatbility
+        """
+        if "https://metadata.athera.io/info" in self.decoded:
+            metadata = self.decoded["https://metadata.athera.io/info"]
+            return metadata["athera_user_id"]
+        else:
+            metadata = self.decoded["https://metadata.elara.io/info"]
+            return metadata["elara_user_id"]
+
+    def get_expiry_string(self):
+        if "exp" not in self.decoded:
+            return None
+
+        return datetime.utcfromtimestamp(self.decoded["exp"]).strftime('%Y-%m-%d %H:%M:%S')
