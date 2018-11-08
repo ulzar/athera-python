@@ -1,5 +1,7 @@
 """ 
-This example will ask for a group, then a string, searching for all app families which contain that string in their name.
+This example will ask you to select an Org, then a string, searching for all App families which contain that string in their name.
+
+Only App families for which the Org has an active entitlement are shown.
 
 It then prints the contained app versions with their type (interactive/compute) and app id.
 
@@ -27,14 +29,14 @@ class AppSearcher(object):
         self.logger.info("Searching families for {}".format(target))
 
         apps_response = apps.get_app_families(self.base_url, self.group_id, self.token)
-        apps_list = common.convert_response(apps_response)
-        if 'families' not in apps_list:
+        apps_dict = common.convert_response(apps_response)
+        if 'families' not in apps_dict:
             return None
 
-        # response contains two fields:
+        # response contains one field:
         # 'families'
-        # 'pagination' - TODO provide details of pagination usage
-        apps_list = apps_list['families']
+
+        apps_list = apps_dict['families']
         # Filter the whole list with the supplied search term, case-insensitive
         return list(filter(lambda x:target.lower() in x['name'].lower(), apps_list))
 
@@ -61,21 +63,20 @@ def main():
     searcher = AppSearcher(logger, base_url, group_id, token)
 
     # Fetch the search term
-    target = input("Search for: ")
+    target = input("-- Enter the app name (or part of) to search for: ")
 
     # Run the search
     families = searcher.search_families(target)
 
-    if len(families) == 0:
-        logger.info("No matches found")
+    # List comprehension to filter bundled. Bundled apps are legacy and should not be used
+    result = list(filter(lambda f: 'Bundled' not in f['name'], families))
+
+    if len(result) == 0:
+        logger.info("-- No apps found (bundled apps are ignored)")
 
     # Pretty-print the output
-    for f in families:
-        if 'Bundled' in f['name']:
-            # Bundled apps are legacy and should not be used
-            continue
-
-        print("{:50} {}".format(f['name'], f['id']))
+    for f in result:
+        logger.info("{:50} {}".format(f['name'], f['id']))
         if 'apps' not in f:
             logger.error("Missing apps data")
             continue
@@ -85,10 +86,10 @@ def main():
         compute_app = apps['compute'] if 'compute' in apps else None
         if interactive_app:
             for k, v in interactive_app.items():
-                print("-- interactive {:35} {}".format(k, v))
+                logger.info("-- interactive {:35} {}".format(k, v))
         if compute_app:
             for k, v in compute_app.items():
-                print("-- compute     {:35} {}".format(k, v))
+                logger.info("-- compute     {:35} {}".format(k, v))
         
 
 if __name__=="__main__":

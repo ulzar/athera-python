@@ -21,7 +21,7 @@ def setup_logging():
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
     # create formatter
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(message)s')
     # add formatter to ch
     ch.setFormatter(formatter)
     # add ch to logger
@@ -53,8 +53,9 @@ def convert_response(response):
 
 class GroupSelector(object):
     """
-    List the groups available to the authenticated user, and ask for selection.
-    Return the id of that selection
+    List the groups available to the authenticated user, and ask for numeric selection.
+    
+    Return the id of that selection.
     """
     def __init__(self, logger, base_url, token):
         super(GroupSelector, self).__init__()
@@ -69,14 +70,20 @@ class GroupSelector(object):
             self.logger.error("Failed getting orgs")
             return None
 
-        orgs = convert_response(orgs_response)
-        if 'groups' not in orgs:            
+        orgs_dict = convert_response(orgs_response)
+        if 'groups' not in orgs_dict:            
             self.logger.error("Missing groups data")
             return None
         
-        # json data in contained within the 'groups' object, so extract that
-        orgs = orgs['groups']
+        # json data in contained within the 'groups' object, so extract that. A 'pagination' object also exists.
+        orgs = orgs_dict['groups']
 
+        # This is technically impossible
+        if len(orgs) == 0:
+            self.logger.error("No orgs found!")
+            return None
+
+        # We have found multiple options so begin the selection process.
         choices = [x['name'] for x in orgs]
         org_index, org_name = SelectionHelper(self.logger, choices, "Select an Org")()
         self.logger.info("Selected {}".format(org_name))
@@ -86,9 +93,11 @@ class GroupSelector(object):
 
 class SelectionHelper(object):
     """
-    Ask user to make a selection from a list of choices.
+    Ask user to make a selection from a list of choices, by entering the number of the choice.
 
     Returns the selected index and choice text.
+
+    Also early returns if the list of choices has a length of 1.
 
     Class is a functor.
     """
@@ -100,19 +109,28 @@ class SelectionHelper(object):
         
 
     def __call__(self):
+        # If there is just a single choice, simply use that.
+        if len(self.choices) == 1:
+            return 0, self.choices[0]
+
+        # Multple choices available - list them with number indices (one-based for humans)
+        self.logger.info("-- {}".format(self.question))
         for i in range(len(self.choices)):
-            self.logger.info("{} {}".format(i, self.choices[i]))   
+            self.logger.info("{}) {}".format(i + 1, self.choices[i]))   
         
         selection = ""
         while len(selection) < 1:
-            i = input(self.question + ": ")
+            i = input("-- ")
             try:
-                selection = self.choices[int(i)]
+                if int(i) == 0:
+                    self.logger.warning("Please enter a number from 1 to {}".format(len(self.choices)))
+                    continue
+                selection = self.choices[int(i)-1]
             except IndexError:
                 # out of range
-                pass
+                self.logger.warning("Invalid choice. Please choose again.")
             except ValueError:
                 # non-numeric input
-                pass
+                self.logger.warning("Please enter a number from 1 to {}".format(len(self.choices)))
             
-        return int(i), selection
+        return int(i)-1, selection
