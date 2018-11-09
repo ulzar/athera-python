@@ -30,7 +30,7 @@ class AppSearcher(object):
 
         apps_response = apps.get_app_families(self.base_url, self.group_id, self.token)
         apps_dict = common.convert_response(apps_response)
-        if 'families' not in apps_dict:
+        if not apps_dict or 'families' not in apps_dict:
             return None
 
         # response contains one field:

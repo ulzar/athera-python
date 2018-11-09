@@ -9,11 +9,12 @@ Once you have a Client ID and Secret, Linux and OSX users can perform the follow
 ```
 export ATHERA_API_CLIENT_ID=<client_id>
 export ATHERA_API_CLIENT_SECRET=<client_secret>
-cd auth
+export PYTHONPATH=<path_to_athera-python>
+cd athera/auth
 ./generate_jwt.sh
 ```
 
-Windows users should be able to improvise by setting the environment variables described above, setting up the python environment in `auth/requirements.txt` (virtual environment recommended) and running `python ./auth/generate_jwt.py`.
+Windows users should be able to improvise by setting the environment variables described above, setting up the python environment in `athera/auth/requirements.txt` (virtual environment recommended) and running `python ./athera/auth/generate_jwt.py`.
 
 Running the script provides a URL which when clicked, or pasted into a browser, walks you through the OAuth process. The script outputs a JWT token.
 
@@ -36,9 +37,12 @@ orgs = get_orgs("<base_url>", "<token>")
 
 base_url is a constant:
 
-`https://api.athera.io/`
+`https://api.athera.io/api/v1`
 
 It is provided as an argument to function calls to allow for future flexibility.
+
+## Examples
+See the examples folder for a few simple scripts which use the api to query your Athera contexts. The examples folder has its own requirements.txt.
 
 ## File sync
 Data I/O between local storage and Athera storage is in progress and will be added in a future release.
