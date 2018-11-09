@@ -6,6 +6,7 @@ import os
 import json
 import logging
 
+
 from six.moves import input
 
 from athera.api import groups
@@ -47,7 +48,10 @@ def convert_response(response):
     """
     json -> dict
     """
-    return response.json()
+    try:
+        return response.json()
+    except:
+        return None
 
 
 
@@ -71,7 +75,7 @@ class GroupSelector(object):
             return None
 
         orgs_dict = convert_response(orgs_response)
-        if 'groups' not in orgs_dict:            
+        if not orgs_dict or 'groups' not in orgs_dict:            
             self.logger.error("Missing groups data")
             return None
         
