@@ -68,28 +68,29 @@ def main():
     # Run the search
     families = searcher.search_families(target)
 
-    # List comprehension to filter bundled. Bundled apps are legacy and should not be used
-    result = list(filter(lambda f: 'Bundled' not in f['name'], families))
+    if families:
+        # List comprehension to filter bundled. Bundled apps are legacy and should not be used
+        result = list(filter(lambda f: 'Bundled' not in f['name'], families))
 
-    if len(result) == 0:
-        logger.info("-- No apps found (bundled apps are ignored)")
+        if len(result) == 0:
+            logger.info("-- No apps found (bundled apps are ignored)")
 
-    # Pretty-print the output
-    for f in result:
-        logger.info("{:50} {}".format(f['name'], f['id']))
-        if 'apps' not in f:
-            logger.error("Missing apps data")
-            continue
+        # Pretty-print the output
+        for f in result:
+            logger.info("{:50} {}".format(f['name'], f['id']))
+            if 'apps' not in f:
+                logger.error("Missing apps data")
+                continue
 
-        apps = f['apps']
-        interactive_app = apps['interactive'] if 'interactive' in apps else None
-        compute_app = apps['compute'] if 'compute' in apps else None
-        if interactive_app:
-            for k, v in interactive_app.items():
-                logger.info("-- interactive {:35} {}".format(k, v))
-        if compute_app:
-            for k, v in compute_app.items():
-                logger.info("-- compute     {:35} {}".format(k, v))
+            apps = f['apps']
+            interactive_app = apps['interactive'] if 'interactive' in apps else None
+            compute_app = apps['compute'] if 'compute' in apps else None
+            if interactive_app:
+                for k, v in interactive_app.items():
+                    logger.info("-- interactive {:35} {}".format(k, v))
+            if compute_app:
+                for k, v in compute_app.items():
+                    logger.info("-- compute     {:35} {}".format(k, v))
         
 
 if __name__=="__main__":
