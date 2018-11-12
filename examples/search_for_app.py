@@ -51,7 +51,7 @@ def main():
     token = common.get_token_from_env()
     if not token:
         logger.fatal("ATHERA_API_TOKEN not set in env")
-        sys.exit(1)
+        return 1
 
     # Show the token expiry
     token_helper = common.TokenHelper(token)
@@ -61,7 +61,7 @@ def main():
     selector = common.GroupSelector(logger, base_url, token)
     group_id = selector.get_org()
     if not group_id:
-        sys.exit(2)
+        return 2
 
     logger.info("Selected {}".format(group_id))
 
@@ -100,4 +100,5 @@ def main():
         
 
 if __name__=="__main__":
-    main()
+    exit_code = main()
+    sys.exit(exit_code)
