@@ -58,7 +58,7 @@ def create_job(base_url, group_id, token, payload):
     Response: [400 Bad Request] Malformed payload
     """
     url = base_url + route_jobs
-    response = requests.post(url, headers=headers(group_id, token), json=payload)
+    response = requests.post(url, headers=headers(group_id, token), json=payload, allow_redirects=False)
     return response
 
 @api_debug

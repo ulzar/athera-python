@@ -1,2 +1,3 @@
 git+git://github.com/athera-io/athera-python.git
 six
+requests
