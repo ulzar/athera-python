@@ -5,3 +5,6 @@ venv/
 archive/
 .vscode/
 .DS_Store
+token.json
+*.xml
+test/required_env_variables.sh
