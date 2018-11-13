@@ -36,11 +36,13 @@ class Client(object):
                     ('active-group', group_id)]
 
         try:
-            mounts = self.stub.Mounts(request, metadata=metadata)
-            return (mounts, None)
+            mountsResponse = self.stub.Mounts(request, metadata=metadata)
+            return mountsResponse.mounts, None
         except grpc.RpcError as e:
             logging.debug("grpc.RpcError %s", e)
-            return (None, e)
+            return None, e
+        except AttributeError as e:
+            return None, e
 
     def get_files(self, group_id, mount_id, path="/"): # ToDo: User provide a buffer
         """
@@ -69,7 +71,6 @@ class Client(object):
         total_bytes = 0
         try:
             response = self.stub.FileContents(request, metadata=metadata, timeout=10)
-            print(type(response))
             for resp in response:
                 total_bytes += resp.bytes_remaining
                 destination_file.write(resp.bytes)
@@ -102,7 +103,6 @@ class Client(object):
                 metadata=metadata,
                 timeout=10
             )
-            print("Got response: {}".format(response))
             return response, None
         except grpc.RpcError as e:
             return None, e
@@ -112,7 +112,6 @@ class Client(object):
     def _retrieve_file_bytes(self, file, chunk_size):
         chunk = file.read(chunk_size)
         while chunk != b"":
-            print("- build FileUploadRequest with {}".format(chunk))
             yield service_pb2.FileUploadRequest(
                 chunk_size=chunk_size,
                 bytes=chunk,

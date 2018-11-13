@@ -217,7 +217,7 @@ class ComputeTest(unittest.TestCase):
             environment.ATHERA_API_TEST_TOKEN,
             payload
         )
-        self.assertEqual(response.status_code, codes.bad_request)
+        self.assertEqual(response.status_code, codes.bad_request, "Create job with unexpected payload, unexpected status code {}".format(response.status_code))
 
     def test_start_job_bad_payload(self):
         """ Negative test - Send a junk payload """
@@ -228,7 +228,7 @@ class ComputeTest(unittest.TestCase):
             environment.ATHERA_API_TEST_TOKEN,
             payload
         )
-        self.assertEqual(response.status_code, codes.bad_request)
+        self.assertEqual(response.status_code, codes.bad_request, "Create job with bad payload, unexpected status code {}".format(response.status_code))
 
     def test_start_job_wrong_group(self):
         """ Negative test - check we cannot launch a compute job in someone else's group """
@@ -248,58 +248,76 @@ class ComputeTest(unittest.TestCase):
             environment.ATHERA_API_TEST_TOKEN,
             payload
         )
-        self.assertEqual(response.status_code, codes.forbidden)
+        self.assertEqual(response.status_code, codes.forbidden, "Create job unexpected status code {}".format(response.status_code))
 
-    # def test_start_and_stop_job(self):
-    #     """ Positive test """
-    #     payload = compute.make_job_request(
-    #         environment.ATHERA_API_TEST_USER_ID, 
-    #         environment.ATHERA_API_TEST_GROUP_ID, 
-    #         environment.ATHERA_API_TEST_COMPUTE_APP_ID, 
-    #         environment.ATHERA_API_TEST_COMPUTE_FILE_PATH, 
-    #         "test_start_and_stop_job_{}".format(hash(self)), 
-    #         1, 2, 1, 
-    #         environment.ATHERA_API_TEST_REGION, 
-    #         compute_arguments,
-    #     )
-    #     response = compute.create_job(
-    #         environment.ATHERA_API_TEST_BASE_URL,
-    #         environment.ATHERA_API_TEST_GROUP_ID,
-    #         environment.ATHERA_API_TEST_TOKEN,
-    #         payload,
-    #    )
-    #     self.assertEqual(response.status_code, codes.ok)
-    #     job_data = response.json()
-    #     job_id = job_data['id']
+    def test_start_and_stop_job(self):
+        """ Positive test """
+        payload = compute.make_job_request(
+            environment.ATHERA_API_TEST_USER_ID, 
+            environment.ATHERA_API_TEST_GROUP_ID, 
+            environment.ATHERA_API_TEST_COMPUTE_APP_ID, 
+            environment.ATHERA_API_TEST_COMPUTE_FILE_PATH, 
+            "test_start_and_stop_job_{}".format(hash(self)), 
+            1, 2, 1, 
+            environment.ATHERA_API_TEST_REGION, 
+            compute_arguments,
+        )
+        response = compute.create_job(
+            environment.ATHERA_API_TEST_BASE_URL,
+            environment.ATHERA_API_TEST_GROUP_ID,
+            environment.ATHERA_API_TEST_TOKEN,
+            payload,
+       )
+        self.assertEqual(response.status_code, codes.ok, "Create job unexpected status code {}".format(response.status_code))
+        job_data = response.json()
+        job_id = job_data['id']
 
-    #     # Abort! Abort!
-    #     response = compute.stop_job(
-    #         environment.ATHERA_API_TEST_BASE_URL,
-    #         environment.ATHERA_API_TEST_GROUP_ID,
-    #         environment.ATHERA_API_TEST_TOKEN,
-    #         job_id
-    #     )
+
+        # Wait until job status is ABORTED
+        error_msg = self.wait_for_job_status(job_id, "CREATED")
+        self.assertIsNone(error_msg, error_msg)
         
-    #     self.assertEqual(response.status_code, codes.ok)
+        # job_id = "d197b188-e57f-4a24-bd04-6bcfae5605b8"
+
+        stop_job_attemps = 0
+        while stop_job_attemps < 5:
+            # Abort! Abort!
+            response = compute.stop_job(
+                environment.ATHERA_API_TEST_BASE_URL,
+                environment.ATHERA_API_TEST_GROUP_ID,
+                environment.ATHERA_API_TEST_TOKEN,
+                job_id
+            )
+            print("Stop job attemp N.{}, status code={}".format(stop_job_attemps, response.status_code))
+            if response.status_code == codes.ok:
+                break
+            stop_job_attemps += 1
+            time.sleep(5)
         
-    #     # Wait for CANCELED, should be pretty instant
-    #     timeout = 60 # 1 minute
-    #     wait_period = 10
-    #     while timeout:
-    #         response = compute.get_job(
-    #             environment.ATHERA_API_TEST_BASE_URL,
-    #             environment.ATHERA_API_TEST_GROUP_ID,
-    #             environment.ATHERA_API_TEST_TOKEN,
-    #             job_id,
-    #         )
-    #         self.assertEqual(response.status_code, codes.ok)
-    #         job_data = response.json()
-    #         self.assertIn("id", job_data)
-    #         self.assertEqual(job_id, job_data['id'])
-    #         job_status = job_data['status'] 
-    #         if job_status == "CANCELED":
-    #             break
+        
+        # Wait until job status is ABORTED
+        error_msg = self.wait_for_job_status(job_id, "ABORTED")
+        self.assertIsNone(error_msg, error_msg)
+
+    def wait_for_job_status(self, job_id, desired_status):
+        timeout = 100 # 1 minute
+        job_status = ""
+        wait_period = 10
+        while timeout:
+            response = compute.get_job(
+                environment.ATHERA_API_TEST_BASE_URL,
+                environment.ATHERA_API_TEST_GROUP_ID,
+                environment.ATHERA_API_TEST_TOKEN,
+                job_id,
+            )
+            self.assertEqual(response.status_code, codes.ok, "Get job unexpected status code {}".format(response.status_code))
+            job_data = response.json()
+            self.assertIn("id", job_data)
+            self.assertEqual(job_id, job_data['id'])
+            job_status = job_data['status'] 
+            if job_status == desired_status:
+                return None
             
-    #         print("{}s {}".format(timeout, job_status))
-    #         timeout -= wait_period
-    #         time.sleep(wait_period)
+            timeout -= wait_period
+            time.sleep(wait_period)
+        return "Waited {} seconds for jobs to reach status {}, but job has status {}".format(timeout, desired_status, job_status)

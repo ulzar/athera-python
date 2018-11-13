@@ -20,12 +20,8 @@ class RefreshTokenPlugin(Plugin):
     alwaysOn = True
     commandLineSwitch = ('RT','RefreshToken','refreshes your token before running unit tests')
 
-    def testOutcome(self, event):
-        print("testOutcome")
-    
     def startTestRun(self, event):
         logging.info("Refreshing token...")
-        print("Refreshing token...")
         token = {}
         # Have we an old token on disk?
         if os.path.exists(self.TOKEN_PATH):
@@ -47,6 +43,5 @@ class RefreshTokenPlugin(Plugin):
         if not token:
             logging.info("refresh_token failed")
             sys.exit(5)
-        print("Token: {}".format(token))
         write_to_env(token)
         write_to_file(token, self.TOKEN_PATH)

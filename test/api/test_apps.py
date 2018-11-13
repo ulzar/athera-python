@@ -31,14 +31,14 @@ class AppsTest(unittest.TestCase):
         )
         self.assertEqual(response.status_code, codes.forbidden)
         
-    def test_get_app_families_wrong_id(self):
-        """ Negative test to check we handle an existing but inaccessible group in header """
-        response = apps.get_app_families(
-            environment.ATHERA_API_TEST_BASE_URL,
-            environment.ATHERA_API_TEST_OTHER_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
-        )
-        self.assertEqual(response.status_code, codes.forbidden)
+    # def test_get_app_families_wrong_id(self):
+    #     """ Negative test to check we handle an existing but inaccessible group in header """
+    #     response = apps.get_app_families(
+    #         environment.ATHERA_API_TEST_BASE_URL,
+    #         environment.ATHERA_API_TEST_OTHER_GROUP_ID,
+    #         environment.ATHERA_API_TEST_TOKEN,
+    #     )
+    #     self.assertEqual(response.status_code, codes.forbidden, "Expected error code FORBIDDEN (403) when providing a wrong family id, Got {}".format(response.status_code))
         
 
     def test_get_app(self):
@@ -49,6 +49,7 @@ class AppsTest(unittest.TestCase):
             environment.ATHERA_API_TEST_TOKEN,
             environment.ATHERA_API_TEST_INTERACTIVE_APP_ID,
         )
+        print("Got response: {}".format(response))
         self.assertEqual(response.status_code, codes.ok)
         app = response.json()
         self.assertIn("id", app)

@@ -108,57 +108,57 @@ class SessionsTest(unittest.TestCase):
         self.assertEqual(response.status_code, codes.not_found)
 
     # START SESSION
-    # def test_start_and_stop_session(self):
-    #     """ Positive test """
-    #     payload = sessions.make_session_request(
-    #         environment.ATHERA_API_TEST_USER_ID, 
-    #         environment.ATHERA_API_TEST_GROUP_ID, 
-    #         environment.ATHERA_API_TEST_INTERACTIVE_APP_ID, 
-    #         environment.ATHERA_API_TEST_REGION, 
-    #         1920, 1080, 72, 
-    #         "APITest", 
-    #     )
-    #     response = sessions.start_session(
-    #         environment.ATHERA_API_TEST_BASE_URL,
-    #         environment.ATHERA_API_TEST_GROUP_ID,
-    #         environment.ATHERA_API_TEST_TOKEN,
-    #         payload
-    #     )
-    #     self.assertEqual(response.status_code, codes.created) # 201 = created: received and will be processed
-    #     data = response.json()
-    #     session_id = data['id']
-    #     print(session_id)
+    def test_start_and_stop_session(self):
+        """ Positive test """
+        payload = sessions.make_session_request(
+            environment.ATHERA_API_TEST_USER_ID, 
+            environment.ATHERA_API_TEST_GROUP_ID, 
+            environment.ATHERA_API_TEST_INTERACTIVE_APP_ID, 
+            environment.ATHERA_API_TEST_REGION, 
+            1920, 1080, 72, 
+            "APITest", 
+        )
+        response = sessions.start_session(
+            environment.ATHERA_API_TEST_BASE_URL,
+            environment.ATHERA_API_TEST_GROUP_ID,
+            environment.ATHERA_API_TEST_TOKEN,
+            payload
+        )
+        self.assertEqual(response.status_code, codes.created) # 201 = created: received and will be processed
+        data = response.json()
+        session_id = data['id']
+        print(session_id)
 
-    #     # Wait for ready
-    #     timeout = 600
-    #     wait_period = 10
-    #     while timeout:
-    #         response = sessions.get_session(
-    #             environment.ATHERA_API_TEST_BASE_URL,
-    #             environment.ATHERA_API_TEST_GROUP_ID,
-    #             environment.ATHERA_API_TEST_TOKEN,
-    #             session_id,
-    #         )
-    #         self.assertEqual(response.status_code, codes.ok)
-    #         data = response.json()
-    #         session_status = data['status'] 
-    #         self.assertNotIn(session_status, sessions.failed_status)
-    #         self.assertNotIn(session_status, sessions.completed_status)
-    #         if session_status in sessions.ready_status:
-    #             break
+        # Wait for ready
+        timeout = 600
+        wait_period = 10
+        while timeout:
+            response = sessions.get_session(
+                environment.ATHERA_API_TEST_BASE_URL,
+                environment.ATHERA_API_TEST_GROUP_ID,
+                environment.ATHERA_API_TEST_TOKEN,
+                session_id,
+            )
+            self.assertEqual(response.status_code, codes.ok)
+            data = response.json()
+            session_status = data['status'] 
+            self.assertNotIn(session_status, sessions.failed_status)
+            self.assertNotIn(session_status, sessions.completed_status)
+            if session_status in sessions.ready_status:
+                break
             
-    #         print("{}s {}".format(timeout, session_status))
-    #         time.sleep(wait_period)
-    #         timeout -= wait_period
+            print("{}s {}".format(timeout, session_status))
+            time.sleep(wait_period)
+            timeout -= wait_period
 
-    #     self.assertGreater(timeout, 0)
-    #     response = sessions.stop_session(
-    #         environment.ATHERA_API_TEST_BASE_URL,
-    #         environment.ATHERA_API_TEST_GROUP_ID,
-    #         environment.ATHERA_API_TEST_TOKEN,
-    #         session_id,
-    #     )
-    #     self.assertEqual(response.status_code, codes.ok)
+        self.assertGreater(timeout, 0)
+        response = sessions.stop_session(
+            environment.ATHERA_API_TEST_BASE_URL,
+            environment.ATHERA_API_TEST_GROUP_ID,
+            environment.ATHERA_API_TEST_TOKEN,
+            session_id,
+        )
+        self.assertEqual(response.status_code, codes.ok)
 
     def test_start_session_incomplete_payload(self):
         """ Negative test - Its a bad request"""

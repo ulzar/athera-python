@@ -110,7 +110,7 @@ class GroupsTest(unittest.TestCase):
         )
         self.assertEqual(response.status_code, codes.forbidden)
 
-    def test_get_group_users_wrong_target(self):
+    def test_get_group_users_wrong_group(self):
         """ Negative test - group is real but should not be accessible by this user """
         response = groups.get_group_users(
             environment.ATHERA_API_TEST_BASE_URL,
