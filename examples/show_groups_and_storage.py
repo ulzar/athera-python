@@ -23,8 +23,7 @@ class RecursivePrinter(object):
         # Do an initial API call to look up information about this group using the group_id.
         group_response = groups.get_group(self.base_url, self.group_id, self.token)
         if group_response.status_code != 200:
-            self.logger.error("Failed getting group {}".format(self.group_id))
-            return None
+            raise RuntimeError("Failed getting group {}".format(self.group_id))
 
         self.group = common.convert_response(group_response)
         self.indented_print("[{}] {} with ID: {} {}".format(self.group['type'], self.group['name'], self.group['id'], self.depth))
@@ -89,6 +88,9 @@ class RecursivePrinter(object):
 
         # Get the ids of child groups
         child_group_ids = self.get_children()
+        if not child_group_ids:            
+            self.logger.error("Unable to get children for {}".format(self.group_id))
+            return
 
         # Recursively repeat
         for group_id in child_group_ids:
