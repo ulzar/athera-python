@@ -4,15 +4,21 @@ from athera.api import apps
 import unittest
 import uuid
 from requests import codes
-
+import os
 
 class AppsTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.token = os.getenv("ATHERA_API_TEST_TOKEN")
+        if not cls.token:
+            raise ValueError("ATHERA_API_TEST_TOKEN environment variable must be set")
+
     def test_get_app_families(self):
         """ Positive test """
         response = apps.get_app_families(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
         )
         self.assertEqual(response.status_code, codes.ok)
         data = response.json()
@@ -27,7 +33,7 @@ class AppsTest(unittest.TestCase):
         response = apps.get_app_families(
             environment.ATHERA_API_TEST_BASE_URL,
             str(uuid.uuid4()), 
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
         )
         self.assertEqual(response.status_code, codes.forbidden)
         
@@ -36,9 +42,9 @@ class AppsTest(unittest.TestCase):
         response = apps.get_app_families(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_OTHER_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
         )
-        self.assertEqual(response.status_code, codes.forbidden)
+        self.assertEqual(response.status_code, codes.forbidden, "Expected error code FORBIDDEN (403) when providing a wrong family id, Got {}".format(response.status_code))
         
 
     def test_get_app(self):
@@ -46,7 +52,7 @@ class AppsTest(unittest.TestCase):
         response = apps.get_app(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_INTERACTIVE_APP_ID,
         )
         self.assertEqual(response.status_code, codes.ok)
@@ -59,7 +65,7 @@ class AppsTest(unittest.TestCase):
         response = apps.get_app(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             str(uuid.uuid4()),
         )
         self.assertEqual(response.status_code, codes.not_found)

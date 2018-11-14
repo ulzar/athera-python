@@ -5,3 +5,9 @@ venv/
 archive/
 .vscode/
 .DS_Store
+token.json
+*.xml
+test/required_env_variables.sh
+test/downloaded_file.txt
+test/report/*
+test/assets/*

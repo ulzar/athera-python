@@ -3,7 +3,7 @@ import sys
 
 # Allow imports from project root
 current_dir = os.path.dirname(os.path.realpath(__file__))
-root_dir = os.path.abspath(os.path.join(current_dir, "..", ".."))
+root_dir = os.path.abspath(os.path.join(current_dir, ".."))
 
 if root_dir not in sys.path:
     sys.path.append(root_dir)
@@ -16,7 +16,9 @@ keys = (
     "ATHERA_API_TEST_COMPUTE_FILE_PATH",
     "ATHERA_API_TEST_TOKEN",
     "ATHERA_API_TEST_BASE_URL",
+    "ATHERA_API_TEST_SYNC_URL",
     "ATHERA_API_TEST_REGION",
+    "ATHERA_API_TEST_DONWLOAD_FILE_PATH",
 
     "ATHERA_API_TEST_GROUP_ID",
     "ATHERA_API_TEST_OTHER_GROUP_ID",
@@ -40,6 +42,9 @@ keys = (
     "ATHERA_API_TEST_GROUP_MOUNT_LOCATION",
     "ATHERA_API_TEST_GCS_BUCKET_ID",
     "ATHERA_API_TEST_GCS_CLIENT_SECRET",
+    "ATHERA_API_TEST_LOCAL_ASSETS_FOLDER",
+    "ATHERA_API_TEST_REMOTE_ASSETS_MOUNT_ID",
+    "ATHERA_API_TEST_REMOTE_ASSETS_FOLDER",
 )
 
 class Environment(object):

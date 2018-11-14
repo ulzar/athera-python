@@ -7,12 +7,19 @@ from athera.auth.generate_jwt import create_client, refresh_token, read_from_env
 
 from nose2.events import Plugin
 
+__unittest = True
+
+
 class RefreshTokenPlugin(Plugin):
     """
     A Nose2 plugin to perform a token refresh before starting a testing session
     """
     TOKEN_PATH="token.json"
-    
+
+    configSection = 'refresh-token'
+    alwaysOn = True
+    commandLineSwitch = ('RT','RefreshToken','refreshes your token before running unit tests')
+
     def startTestRun(self, event):
         logging.info("Refreshing token...")
         token = {}
@@ -36,6 +43,5 @@ class RefreshTokenPlugin(Plugin):
         if not token:
             logging.info("refresh_token failed")
             sys.exit(5)
-
         write_to_env(token)
         write_to_file(token, self.TOKEN_PATH)

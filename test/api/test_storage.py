@@ -4,16 +4,22 @@ import time
 import unittest
 import uuid
 from requests import codes
-
+import os
 
 class StorageTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.token = os.getenv("ATHERA_API_TEST_TOKEN")
+        if not cls.token:
+            raise ValueError("ATHERA_API_TEST_TOKEN environment variable must be set")
+
     # User Mounts
     def test_get_drivers(self):
         """ Positive test - Get drivers of the user, the provided group_id and the group's ancestors """
         response = storage.get_drivers(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
         )
         self.assertEqual(response.status_code, codes.ok)
         data = response.json()
@@ -28,7 +34,7 @@ class StorageTest(unittest.TestCase):
         response = storage.get_driver(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_ORG_DRIVER_ID,
         )
         self.assertEqual(response.status_code, codes.ok)
@@ -51,7 +57,7 @@ class StorageTest(unittest.TestCase):
         response = storage.create_driver(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             storage.create_gcs_storage_driver_request(
                 name=fake_name,
                 bucket_id=environment.ATHERA_API_TEST_GCS_BUCKET_ID,
@@ -74,7 +80,7 @@ class StorageTest(unittest.TestCase):
         response = storage.delete_driver(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             driver["id"],
         )
         self.assertEqual(response.status_code, codes.ok)
@@ -88,48 +94,45 @@ class StorageTest(unittest.TestCase):
         self.assertEqual(mount["type"], "MountTypeGroupCustom")
         self.assertEqual(mount["name"], fake_name)
 
-    # def test_rescan_driver(self):
-    #     """ Positive test - List the mounts the authenticated user has in this group """
-    #     driver_id = environment.ATHERA_API_TEST_HOME_DRIVER_ID
-    #     status = self.get_driver_indexing_status(driver_id)
-    #     self.assertEqual(status, False)
+    def test_rescan_driver(self):
+        """ Positive test - Perform a rescan on the HOME driver"""
+        driver_id = environment.ATHERA_API_TEST_HOME_DRIVER_ID
+        status = self.get_driver_indexing_status(driver_id)
+        self.assertEqual(status, False, "Cannot test rescan because Home driver is being indexed")
         
-    #     response = storage.rescan_driver(
-    #         environment.ATHERA_API_TEST_BASE_URL,
-    #         environment.ATHERA_API_TEST_GROUP_ID,
-    #         environment.ATHERA_API_TEST_TOKEN,
-    #         driver_id,
-    #     )
-    #     print (response.status_code)
-    #     self.assertEqual(response.status_code, codes.ok)
+        response = storage.rescan_driver(
+            environment.ATHERA_API_TEST_BASE_URL,
+            environment.ATHERA_API_TEST_GROUP_ID,
+            self.token,
+            driver_id,
+        )
+        self.assertEqual(response.status_code, codes.ok)
         
 
-    # def test_dropcache_driver(self):
-    #     """ Positive test - List the mounts the authenticated user has in this group """
-    #     driver_id = environment.ATHERA_API_TEST_ORG_DRIVER_ID
-    #     status = self.get_driver_indexing_status(driver_id)
-    #     self.assertEqual(status, False)
+    def test_dropcache_driver(self):
+        """ Positive test - Perform a Drop Cache on the Org driver """
+        driver_id = environment.ATHERA_API_TEST_ORG_DRIVER_ID
+        status = self.get_driver_indexing_status(driver_id)
+        self.assertEqual(status, False, "Cannot test dropcache because Org driver is being indexed")
         
-    #     print ("\n Perform dropcache")
-    #     response = storage.dropcache_driver(
-    #         environment.ATHERA_API_TEST_BASE_URL,
-    #         environment.ATHERA_API_TEST_GROUP_ID,
-    #         environment.ATHERA_API_TEST_TOKEN,
-    #         driver_id,
-    #     )
-    #     self.assertEqual(response.status_code, codes.ok)
+        response = storage.dropcache_driver(
+            environment.ATHERA_API_TEST_BASE_URL,
+            environment.ATHERA_API_TEST_GROUP_ID,
+            self.token,
+            driver_id,
+        )
+        self.assertEqual(response.status_code, codes.ok)
 
 
     def get_driver_indexing_status(self, driver_id):
         response = storage.get_driver(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             driver_id,
         )
         self.assertEqual(response.status_code, codes.ok)
         data = response.json()
-        print (data)
         self.assertEqual(data["type"], "GCS")
         statuses = data["statuses"]
         self.assertNotEqual(len(statuses), 0)
