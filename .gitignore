@@ -9,6 +9,5 @@ token.json
 *.xml
 test/required_env_variables.sh
 test/downloaded_file.txt
-test/*.html
-test/*.nk
 test/report/*
+test/assets/*

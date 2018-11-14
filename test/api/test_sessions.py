@@ -5,15 +5,21 @@ import unittest
 import uuid
 import time
 from requests import codes
-
+import os
 
 class SessionsTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.token = os.getenv("ATHERA_API_TEST_TOKEN")
+        if not cls.token:
+            raise ValueError("ATHERA_API_TEST_TOKEN environment variable must be set")
+
     def test_get_user_sessions(self):
         """ Positive test """
         response = sessions.get_user_sessions(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_USER_ID,
         )
         self.assertEqual(response.status_code, codes.ok)
@@ -29,7 +35,7 @@ class SessionsTest(unittest.TestCase):
         response = sessions.get_user_sessions(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_OTHER_USER_ID,
         )
         self.assertEqual(response.status_code, codes.forbidden)
@@ -39,7 +45,7 @@ class SessionsTest(unittest.TestCase):
         response = sessions.get_user_sessions(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_OTHER_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_OTHER_USER_ID,
         )
         self.assertEqual(response.status_code, codes.forbidden)
@@ -49,7 +55,7 @@ class SessionsTest(unittest.TestCase):
         response = sessions.get_user_sessions(
             environment.ATHERA_API_TEST_BASE_URL,
             "",
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_OTHER_USER_ID,
         )
         self.assertEqual(response.status_code, codes.internal_server_error)
@@ -59,7 +65,7 @@ class SessionsTest(unittest.TestCase):
         response = sessions.get_user_sessions(
             environment.ATHERA_API_TEST_BASE_URL,
             "wensleydale",
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_OTHER_USER_ID,
         )
         self.assertEqual(response.status_code, codes.internal_server_error)
@@ -69,7 +75,7 @@ class SessionsTest(unittest.TestCase):
         response = sessions.get_session(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_SESSION_ID,
         )
         self.assertEqual(response.status_code, codes.ok)
@@ -82,7 +88,7 @@ class SessionsTest(unittest.TestCase):
         response = sessions.get_session(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_OTHER_SESSION_ID,
         )
         self.assertEqual(response.status_code, codes.not_found)
@@ -92,7 +98,7 @@ class SessionsTest(unittest.TestCase):
         response = sessions.get_session(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_OTHER_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_OTHER_SESSION_ID,
         )
         self.assertEqual(response.status_code, codes.forbidden)
@@ -102,7 +108,7 @@ class SessionsTest(unittest.TestCase):
         response = sessions.get_session(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             str(uuid.uuid4()),
         )
         self.assertEqual(response.status_code, codes.not_found)
@@ -121,7 +127,7 @@ class SessionsTest(unittest.TestCase):
         response = sessions.start_session(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             payload
         )
         self.assertEqual(response.status_code, codes.created) # 201 = created: received and will be processed
@@ -136,7 +142,7 @@ class SessionsTest(unittest.TestCase):
             response = sessions.get_session(
                 environment.ATHERA_API_TEST_BASE_URL,
                 environment.ATHERA_API_TEST_GROUP_ID,
-                environment.ATHERA_API_TEST_TOKEN,
+                self.token,
                 session_id,
             )
             self.assertEqual(response.status_code, codes.ok)
@@ -155,7 +161,7 @@ class SessionsTest(unittest.TestCase):
         response = sessions.stop_session(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             session_id,
         )
         self.assertEqual(response.status_code, codes.ok)
@@ -166,7 +172,7 @@ class SessionsTest(unittest.TestCase):
         response = sessions.start_session(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             payload,
         )
         self.assertEqual(response.status_code, codes.bad_request) 
@@ -177,7 +183,7 @@ class SessionsTest(unittest.TestCase):
         response = sessions.start_session(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             payload,
         )
         self.assertEqual(response.status_code, codes.bad_request)

@@ -5,9 +5,16 @@ import unittest
 import uuid
 import time
 from requests import codes
+import os
 
 
 class ComputeTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.token = os.getenv("ATHERA_API_TEST_TOKEN")
+        if not cls.token:
+            raise ValueError("ATHERA_API_TEST_TOKEN environment variable must be set")
+
 
     # JOBS
     def test_get_jobs(self):
@@ -15,7 +22,7 @@ class ComputeTest(unittest.TestCase):
         response = compute.get_jobs(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN
+            self.token
         )
         self.assertEqual(response.status_code, codes.ok)
         data = response.json()
@@ -32,7 +39,7 @@ class ComputeTest(unittest.TestCase):
         response = compute.get_jobs(
             environment.ATHERA_API_TEST_BASE_URL,
             "cheddar",
-            environment.ATHERA_API_TEST_TOKEN
+            self.token
         )
         self.assertEqual(response.status_code, codes.internal_server_error)
 
@@ -41,7 +48,7 @@ class ComputeTest(unittest.TestCase):
         response = compute.get_jobs(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_OTHER_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN
+            self.token
         )
         self.assertEqual(response.status_code, codes.forbidden)
 
@@ -50,7 +57,7 @@ class ComputeTest(unittest.TestCase):
         response = compute.get_job(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_JOB_ID,
         )
         self.assertEqual(response.status_code, codes.ok)
@@ -63,7 +70,7 @@ class ComputeTest(unittest.TestCase):
         response = compute.get_job(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_OTHER_JOB_ID,
         )
         self.assertEqual(response.status_code, codes.not_found)
@@ -73,7 +80,7 @@ class ComputeTest(unittest.TestCase):
         response = compute.get_job(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_OTHER_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_OTHER_JOB_ID,
         )
         self.assertEqual(response.status_code, codes.forbidden)
@@ -83,7 +90,7 @@ class ComputeTest(unittest.TestCase):
         response = compute.get_job(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             str(uuid.uuid4())
         )
         self.assertEqual(response.status_code, codes.not_found)
@@ -93,7 +100,7 @@ class ComputeTest(unittest.TestCase):
         response = compute.get_job(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             "stilton"
         )
         self.assertEqual(response.status_code, codes.bad_request)
@@ -105,7 +112,7 @@ class ComputeTest(unittest.TestCase):
         response = compute.get_parts(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_JOB_ID,
         )
         self.assertEqual(response.status_code, codes.ok)
@@ -121,7 +128,7 @@ class ComputeTest(unittest.TestCase):
         response = compute.get_part(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_JOB_ID,
             environment.ATHERA_API_TEST_PART_ID,
         )
@@ -135,7 +142,7 @@ class ComputeTest(unittest.TestCase):
         response = compute.get_part(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_OTHER_JOB_ID,
             environment.ATHERA_API_TEST_OTHER_PART_ID,
         )
@@ -146,7 +153,7 @@ class ComputeTest(unittest.TestCase):
         response = compute.get_part(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_OTHER_JOB_ID,
             environment.ATHERA_API_TEST_OTHER_PART_ID,
         )
@@ -157,7 +164,7 @@ class ComputeTest(unittest.TestCase):
         response = compute.get_part(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             str(uuid.uuid4()), 
             str(uuid.uuid4()),
         )
@@ -180,7 +187,7 @@ class ComputeTest(unittest.TestCase):
         response = compute.create_job(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             payload,
         )
         self.assertEqual(response.status_code, codes.ok)
@@ -194,7 +201,7 @@ class ComputeTest(unittest.TestCase):
             response = compute.get_parts(			
                 environment.ATHERA_API_TEST_BASE_URL,
                 environment.ATHERA_API_TEST_GROUP_ID,
-                environment.ATHERA_API_TEST_TOKEN,
+                self.token,
                 environment.ATHERA_API_TEST_JOB_ID,
             )
             self.assertEqual(response.status_code, codes.ok)
@@ -214,10 +221,10 @@ class ComputeTest(unittest.TestCase):
         response = compute.create_job(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             payload
         )
-        self.assertEqual(response.status_code, codes.bad_request, "Create job with unexpected payload, unexpected status code {}".format(response.status_code))
+        self.assertEqual(response.status_code, codes.bad_request, "Start job with incomplete payload, unexpected status code {}".format(response.status_code))
 
     def test_start_job_bad_payload(self):
         """ Negative test - Send a junk payload """
@@ -225,10 +232,10 @@ class ComputeTest(unittest.TestCase):
         response = compute.create_job(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             payload
         )
-        self.assertEqual(response.status_code, codes.bad_request, "Create job with bad payload, unexpected status code {}".format(response.status_code))
+        self.assertEqual(response.status_code, codes.bad_request, "Start job with bad payload, unexpected status code {}".format(response.status_code))
 
     def test_start_job_wrong_group(self):
         """ Negative test - check we cannot launch a compute job in someone else's group """
@@ -245,10 +252,10 @@ class ComputeTest(unittest.TestCase):
         response = compute.create_job(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_OTHER_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             payload
         )
-        self.assertEqual(response.status_code, codes.forbidden, "Create job unexpected status code {}".format(response.status_code))
+        self.assertEqual(response.status_code, codes.forbidden, "Start job with wrong group, unexpected status code {}".format(response.status_code))
 
     def test_start_and_stop_job(self):
         """ Positive test """
@@ -265,7 +272,7 @@ class ComputeTest(unittest.TestCase):
         response = compute.create_job(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             payload,
        )
         self.assertEqual(response.status_code, codes.ok, "Create job unexpected status code {}".format(response.status_code))
@@ -285,7 +292,7 @@ class ComputeTest(unittest.TestCase):
             response = compute.stop_job(
                 environment.ATHERA_API_TEST_BASE_URL,
                 environment.ATHERA_API_TEST_GROUP_ID,
-                environment.ATHERA_API_TEST_TOKEN,
+                self.token,
                 job_id
             )
             print("Stop job attemp N.{}, status code={}".format(stop_job_attemps, response.status_code))
@@ -307,7 +314,7 @@ class ComputeTest(unittest.TestCase):
             response = compute.get_job(
                 environment.ATHERA_API_TEST_BASE_URL,
                 environment.ATHERA_API_TEST_GROUP_ID,
-                environment.ATHERA_API_TEST_TOKEN,
+                self.token,
                 job_id,
             )
             self.assertEqual(response.status_code, codes.ok, "Get job unexpected status code {}".format(response.status_code))
@@ -320,4 +327,4 @@ class ComputeTest(unittest.TestCase):
             
             timeout -= wait_period
             time.sleep(wait_period)
-        return "Waited {} seconds for jobs to reach status {}, but job has status {}".format(timeout, desired_status, job_status)
+        return "Waited 100 seconds for jobs to reach status {}, but job has status {}".format(desired_status, job_status)

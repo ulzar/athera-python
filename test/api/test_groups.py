@@ -4,14 +4,20 @@ from athera.api import groups
 import unittest
 import uuid
 from requests import codes
-
+import os
 
 class GroupsTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.token = os.getenv("ATHERA_API_TEST_TOKEN")
+        if not cls.token:
+            raise ValueError("ATHERA_API_TEST_TOKEN environment variable must be set")
+
     def test_get_orgs(self):
         """ Positive test """
         response = groups.get_orgs(
             environment.ATHERA_API_TEST_BASE_URL,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
         )
         self.assertEqual(response.status_code, codes.ok)
         data = response.json()
@@ -26,7 +32,7 @@ class GroupsTest(unittest.TestCase):
         response = groups.get_group(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
         )
         self.assertEqual(response.status_code, codes.ok)
         group_data = response.json()
@@ -37,7 +43,7 @@ class GroupsTest(unittest.TestCase):
         response = groups.get_group(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             str(uuid.uuid4())
         )
         self.assertEqual(response.status_code, codes.not_found)
@@ -47,7 +53,7 @@ class GroupsTest(unittest.TestCase):
         response = groups.get_group(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_OTHER_GROUP_ID,
         )
         self.assertEqual(response.status_code, codes.not_found)
@@ -57,7 +63,7 @@ class GroupsTest(unittest.TestCase):
         response = groups.get_group_children(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
         )
         self.assertEqual(response.status_code, codes.ok)
         data = response.json()
@@ -71,7 +77,7 @@ class GroupsTest(unittest.TestCase):
         response = groups.get_group_children(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             str(uuid.uuid4())
         )
         self.assertEqual(response.status_code, codes.not_found)
@@ -81,7 +87,7 @@ class GroupsTest(unittest.TestCase):
         response = groups.get_group_children(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_OTHER_GROUP_ID,
         )
         self.assertEqual(response.status_code, codes.not_found)
@@ -91,7 +97,7 @@ class GroupsTest(unittest.TestCase):
         response = groups.get_group_users(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
         )
         self.assertEqual(response.status_code, codes.ok)
         data = response.json()
@@ -106,7 +112,7 @@ class GroupsTest(unittest.TestCase):
         response = groups.get_group_users(
             environment.ATHERA_API_TEST_BASE_URL,
             str(uuid.uuid4()),
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
         )
         self.assertEqual(response.status_code, codes.forbidden)
 
@@ -115,7 +121,7 @@ class GroupsTest(unittest.TestCase):
         response = groups.get_group_users(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_OTHER_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
         )
         self.assertEqual(response.status_code, codes.forbidden)
 
@@ -124,7 +130,7 @@ class GroupsTest(unittest.TestCase):
         response = groups.get_group_users(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             str(uuid.uuid4())
         )
         self.assertEqual(response.status_code, codes.not_found)
@@ -134,7 +140,7 @@ class GroupsTest(unittest.TestCase):
         response = groups.get_group_users(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_OTHER_GROUP_ID,
         )
         self.assertEqual(response.status_code, codes.not_found)
