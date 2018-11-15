@@ -6,9 +6,10 @@ from athera.sync.sirius.services import service_pb2_grpc
 import sys
 import io 
 
-MAX_CHUNK_SIZE = 1024 * 1024  # 1Mb
+ONE_MB = 1024 * 1024
+MAX_CHUNK_SIZE = 1 * ONE_MB
 
-MAP_PRETTY_NAME_TO_REGION_NAME = {
+REGION_URLS = {
     "us-west1": "us-west1.files.athera.io:443",
     "europe-west1": "files.athera.io:443",
     "australia-southeast1": "australia-southeast1.files.athera.io:443"
@@ -17,35 +18,38 @@ MAP_PRETTY_NAME_TO_REGION_NAME = {
 class Client(object):
     """
     Client to query the remote grpc file sync service, Sirius.
+    
     Improvements:
-    In a futur version, check if token is expired before performing api call; if so, refresh it.
+    * Check if token is expired before performing API call. If so, refresh it.
     """
 
     def __init__(self, region, token):
         """ 
-        'region': specifies the ingress point for the data. Use the region closest to you.
+        'region': The ingress point for the data. Use the region geographically closest to you.
                   Other regions may have to perform a 'rescan' on the mount_id to detect the newly uploaded file.
-        'token':  0Auth2 token. see more in athera.auth.generate_jwt.py on how to generate such token
+        'token':  JSON Web Token. See athera.auth.generate_jwt.py on how to generate a JWT.
         """
         
-        self.url = MAP_PRETTY_NAME_TO_REGION_NAME.get(region)
+        self.url = REGION_URLS.get(region)
         if not self.url:
-            raise ValueError("Wrong region, please provide one of the following: {}".format(REGION_NAMES.keys()))
+            raise ValueError("Unknown region. Please use one of the following: {}".format(REGION_URLS.keys()))
+
         self.credentials = grpc.ssl_channel_credentials()
         self.token = token
         channel = grpc.secure_channel(self.url, self.credentials)
-        self.stub = stub = service_pb2_grpc.SiriusStub(channel)
+        self.stub = service_pb2_grpc.SiriusStub(channel)
        
 
     def get_mounts(self, group_id):
         """
-        Using the provided credentials, which identify a user, provide the mounts for the supplied group.
-        It returns of list of object of the type below
+        Provide a ist of the mounts available to the supplied group, including those inherited from ancestor groups.
+        
+        Returns of list of sirius.types.Mount objects.
 
         sirius.types.Mount:
-            id              // (str) The id of the mount
+            id              // (str) The id of the storage mount
             name            // (str) The name of the mount
-            mount_location  // (str) The mount root path
+            mount_location  // (str) The mount root path (where it will appear in Athera sessions)
             group_id        // (str) The id of the mount belongs to
 
         """
@@ -66,16 +70,17 @@ class Client(object):
 
     def get_files(self, group_id, mount_id, path="/"):
         """
-        Using the provided credentials, group and mount, provide a list of files at the (optional) supplied path.
-        Returns a generator of objects of the type below.
+        Using the provided group and mount, provide a list of files at the (optional) supplied path.
+
+        Returns a generator of sirius.services.FilesListResponse objects.
 
         sirius.services.FilesListResponse:
-            path        // (str) The location where the listing has been done (relative to the mount root).
+            path        // (str) The location where the listing has been done (relative to the mount root)
             mount_id    // (str) The id of the mount being queried
-            file        // (sirius.types.File) A protobuf object, see below
+            file        // (sirius.types.File) A protobuf object. See below
 
         sirius.types.File:
-            path        // (str) The full path of the file (relative to the mount root).
+            path        // (str) The full path of the file (relative to the mount root)
             name        // (str) Name
             mount_id    // (str) The id of the mount being queried
             size        // (int) Size of the object in bytes
@@ -83,7 +88,7 @@ class Client(object):
             
         sirius.types.File.Type:
             // A protobuf enumeration type.
-           enum Type {
+            enum Type {
                 UNKNOWN = 0;
                 DIRECTORY = 1;
                 FILE = 2;
@@ -100,22 +105,28 @@ class Client(object):
         except grpc.RpcError as e:
             yield None, e
 
-    def download_to_file(self, group_id, mount_id, destination_file, path="/", chunk_size=MAX_CHUNK_SIZE): # ToDo: User provide a buffer
+    def download_to_file(self, group_id, mount_id, destination_file, path="/", chunk_size=MAX_CHUNK_SIZE): 
         """
-        Download a file by chunks of up to 1 Mb.
-        It will return an error if the path is not a file.
-        'destination_file': the downloaded file will be saved at this location on your machine.
+        Download a file in chunks of up to 1 Mb.
+
+        'destination_file': A file-like object to which the downloaded data will be written.
+
+        Returns an error if 'path' is not a file.
         """
-        if chunk_size >= MAX_CHUNK_SIZE: # We limit the chunk size to 1Mb
-            raise ValueError("chunk_size is too high, the maximum value for chunck_size is {} (1Mb)".format(MAX_CHUNK_SIZE))
+        if chunk_size > MAX_CHUNK_SIZE: # We limit the chunk size to 1Mb
+            raise ValueError("chunk_size exceeds maximum value of {} bytes ({}M)".format(MAX_CHUNK_SIZE, MAX_CHUNK_SIZE / ONE_MB))
+
         request = service_pb2.FileContentsRequest(mount_id=mount_id, path=path, chunk_size=chunk_size)
         metadata = [('authorization', "bearer: {}".format(self.token)),
                     ('active-group', group_id)]
+                    
         total_bytes = 0
         try:
             response = self.stub.FileContents(request, metadata=metadata)
             for resp in response:
                 destination_file.write(resp.bytes)
+                total_bytes += resp.bytes
+
             logging.debug("Successfully wrote {} bytes into {}".format(total_bytes, destination_file.name))
         except grpc.RpcError as e:
             return e
@@ -125,16 +136,18 @@ class Client(object):
     def upload_file(self, group_id, mount_id, file_to_upload, destination_path, chunk_size=MAX_CHUNK_SIZE):
         """
         Upload a file by chunks of up to 1 Mb.
-        mount_id allows you to select on which mount you would like to upload your file.
-        file_to_upload is a file object of the file to upload, read access is enough.
-        destination_path is the path on the mount at which the file will be uploaded (relative to the mount root).
-            Let's say the root path of the mount (you want to upload your file to) is /data/org/default-my-org
-            And within this mount, you want to upload your file in the folder 'uploads'
-            Let's say your filename is 'my_secret_movie.mov'
-            Your 'destination_path' would be: 'uploads/my_secret_movie.mov'
+
+        'mount_id':         Storage Mount to upload file to.
+        'file_to_upload':   The file object of the file to upload, read access is enough.
+        'destination_path': The path on the mount where the file will be uploaded (relative to the mount root).
+
+        An example:
+        * The final location needs to be '/data/org/default-my-org/uploads/movie1.mov'
+        * The mount provides the root path of '/data/org/default-my-org'
+        * Therefore, the 'destination_path' would need to be 'uploads/movie1.mov'
         """
-        if chunk_size >= MAX_CHUNK_SIZE:
-            raise ValueError("chunk_size is too high, the maximum value for chunck_size is {} (1Mb)".format(MAX_CHUNK_SIZE))
+        if chunk_size > MAX_CHUNK_SIZE:
+            raise ValueError("chunk_size exceeds maximum value of {} bytes ({}M)".format(MAX_CHUNK_SIZE, MAX_CHUNK_SIZE / ONE_MB))
         
         metadata = [
             ('authorization', "bearer: {}".format(self.token)),

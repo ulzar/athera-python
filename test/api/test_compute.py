@@ -286,8 +286,8 @@ class ComputeTest(unittest.TestCase):
         
         # job_id = "d197b188-e57f-4a24-bd04-6bcfae5605b8"
 
-        stop_job_attemps = 0
-        while stop_job_attemps < 5:
+        stop_job_attempts = 0
+        while stop_job_attempts < 5:
             # Abort! Abort!
             response = compute.stop_job(
                 environment.ATHERA_API_TEST_BASE_URL,
@@ -295,12 +295,11 @@ class ComputeTest(unittest.TestCase):
                 self.token,
                 job_id
             )
-            print("Stop job attemp N.{}, status code={}".format(stop_job_attemps, response.status_code))
+            print("Stop job attemp N.{}, status code={}".format(stop_job_attempts, response.status_code))
             if response.status_code == codes.ok:
                 break
-            stop_job_attemps += 1
+            stop_job_attempts += 1
             time.sleep(5)
-        
         
         # Wait until job status is ABORTED
         error_msg = self.wait_for_job_status(job_id, "ABORTED")
@@ -310,6 +309,7 @@ class ComputeTest(unittest.TestCase):
         timeout = 100 # 1 minute
         job_status = ""
         wait_period = 10
+
         while timeout:
             response = compute.get_job(
                 environment.ATHERA_API_TEST_BASE_URL,
@@ -327,4 +327,6 @@ class ComputeTest(unittest.TestCase):
             
             timeout -= wait_period
             time.sleep(wait_period)
-        return "Waited 100 seconds for jobs to reach status {}, but job has status {}".format(desired_status, job_status)
+
+        return "Waited 100 seconds for job to reach status {}, but job has status {}".format(desired_status, job_status)
+        
