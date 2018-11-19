@@ -10,16 +10,20 @@ if root_dir not in sys.path:
 
 compute_arguments    = ("--help",)
 
-keys = (
-    "ATHERA_API_TEST_INTERACTIVE_APP_ID",
-    "ATHERA_API_TEST_COMPUTE_APP_ID",
-    "ATHERA_API_TEST_COMPUTE_FILE_PATH",
+keys = ( 
+    #  Athera globals
     "ATHERA_API_TEST_TOKEN",
     "ATHERA_API_TEST_BASE_URL",
     "ATHERA_API_TEST_SYNC_URL",
     "ATHERA_API_TEST_REGION",
     "ATHERA_API_TEST_DONWLOAD_FILE_PATH",
 
+    # Apps 
+    "ATHERA_API_TEST_INTERACTIVE_APP_ID",
+    "ATHERA_API_TEST_COMPUTE_APP_ID",
+    "ATHERA_API_TEST_COMPUTE_FILE_PATH",
+
+    # User
     "ATHERA_API_TEST_GROUP_ID",
     "ATHERA_API_TEST_OTHER_GROUP_ID",
     "ATHERA_API_TEST_USER_ID",
@@ -27,17 +31,19 @@ keys = (
     "ATHERA_API_TEST_SESSION_ID",
     "ATHERA_API_TEST_OTHER_SESSION_ID",
 
+    # Compute
     "ATHERA_API_TEST_JOB_ID",
     "ATHERA_API_TEST_PART_ID",
     "ATHERA_API_TEST_OTHER_JOB_ID",
     "ATHERA_API_TEST_OTHER_PART_ID",
     "ATHERA_API_TEST_OTHER_JOB_GROUP_ID",
 
+    # Storage
     "ATHERA_API_TEST_USER_MOUNT_ID",
     "ATHERA_API_TEST_OTHER_USER_MOUNT_ID",
     "ATHERA_API_TEST_GROUP_MOUNT_ID",
     "ATHERA_API_TEST_OTHER_GROUP_MOUNT_ID",
-    "ATHERA_API_TEST_ORG_DRIVER_ID",
+    "ATHERA_API_TEST_GROUP_DRIVER_ID",
     "ATHERA_API_TEST_HOME_DRIVER_ID",
     "ATHERA_API_TEST_GROUP_MOUNT_LOCATION",
     "ATHERA_API_TEST_GCS_BUCKET_ID",
@@ -50,11 +56,12 @@ keys = (
 class Environment(object):
     def __init__(self, keys):
         for k in keys:
-            # Expect an exception if not set
-            v = os.environ[k]
+            v = os.getenv(k)
             self.__setattr__(k, v)
 
     def __getattr__(self, name):
+        if not self.__dict__[name]:
+            raise RuntimeError("{} is not set in environment".format(name))
         return self[name]
 
 environment = Environment(keys)
