@@ -280,12 +280,10 @@ class ComputeTest(unittest.TestCase):
         job_id = job_data['id']
 
 
-        # Wait until job status is ABORTED
+        # Wait until job status is CREATED
         error_msg = self.wait_for_job_status(job_id, "CREATED")
         self.assertIsNone(error_msg, error_msg)
         
-        # job_id = "d197b188-e57f-4a24-bd04-6bcfae5605b8"
-
         stop_job_attempts = 0
         while stop_job_attempts < 5:
             # Abort! Abort!
@@ -295,18 +293,17 @@ class ComputeTest(unittest.TestCase):
                 self.token,
                 job_id
             )
-            print("Stop job attemp N.{}, status code={}".format(stop_job_attempts, response.status_code))
+            print("Stop job attempt {}, status code={}".format(stop_job_attempts, response.status_code))
             if response.status_code == codes.ok:
                 break
             stop_job_attempts += 1
             time.sleep(5)
         
-        # Wait until job status is ABORTED
-        error_msg = self.wait_for_job_status(job_id, "ABORTED")
+        # Wait until job status is ABORTED. This can take a while because if vm provisioning began, we have to wait for it to be READY to turn it off.
+        error_msg = self.wait_for_job_status(job_id, "ABORTED", 600)
         self.assertIsNone(error_msg, error_msg)
 
-    def wait_for_job_status(self, job_id, desired_status):
-        timeout = 100 # 1 minute
+    def wait_for_job_status(self, job_id, desired_status, timeout=60):
         job_status = ""
         wait_period = 10
 
