@@ -125,7 +125,7 @@ class Client(object):
             response = self.stub.FileContents(request, metadata=metadata)
             for resp in response:
                 destination_file.write(resp.bytes)
-                total_bytes += resp.bytes
+                total_bytes += len(resp.bytes)
 
             logging.debug("Successfully wrote {} bytes into {}".format(total_bytes, destination_file.name))
         except grpc.RpcError as e:
