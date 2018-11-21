@@ -12,7 +12,9 @@ from datetime import datetime
 from six.moves import input
 
 from athera.api import groups
+from athera.sync import client as sync_client
 
+DEFAULT_REGION = "europe-west1"
 
 def setup_logging():
     """
@@ -63,6 +65,46 @@ def select_region(logger, question):
     choices = ("europe-west1", "us-west1", "australia-southeast1")
     region_index_unused, region_name = SelectionHelper(logger, choices, question)()
     return region_name
+
+
+
+class MountSelector(object):
+    """
+    List the groups available to the authenticated user, and ask for numeric selection.
+    
+    Return the id of that selection.
+    """
+    def __init__(self, logger, token):
+        super(MountSelector, self).__init__()
+        self.logger = logger
+        self.client = sync_client.Client(DEFAULT_REGION, token)
+        
+
+    def _get_mounts(self, group_id):
+        """ Get all mounts for the active group
+        """
+        self.logger.info("Getting mounts for group ({})".format(group_id))
+
+        mounts_response, err = self.client.get_mounts(group_id)
+        if err != None:
+            self.logger.error("Failed getting mounts: {}".format(err))
+            sys.exit(2)
+
+        return mounts_response
+
+    def select_mount(self, group_id, question):
+        mounts = self._get_mounts(group_id)
+        if len(mounts) < 1:
+            self.logger.info("You don't have any mounts")
+            sys.exit(2)
+                    
+        choices = []
+        for mount in mounts:
+            choices.append(mount.mount_location)
+
+        mount_index_unused, mount_location_name = SelectionHelper(self.logger, choices, question)()
+        return mounts[mount_index_unused]
+
 
 
 class GroupSelector(object):
