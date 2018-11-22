@@ -1,9 +1,15 @@
 """ 
 This example will show an implementation on how to copy a local folder to athera.
 You will be asked to:
-1) select a mount on which you would like your folder to be uploaded to
-2) provide the path of your local directory you would like to upload.
+    1) select a destination in Athera to copy the data. This is an Athera mount, associated with a Group context.
+    2) provide the path of your local directory you would like to upload.
 
+If there is an error, the program will exit with a specific exit code:
+ - "1" - Wrong environment variables
+ - "2" - Wrong Input
+ - "3" - HTTP error during API call
+ - "4" - GRPC error during the API call
+ - "5" - Unexpected API result
 Tested with Python 3.6.4
 """
 
@@ -28,7 +34,6 @@ class FolderSyncer(object):
         ''' This method will list every file at the local_directory_path and then for each,
         it will call the api method athera.sync.upload_file for every file in your local directory
         '''
-
         
         _, destination_folder = os.path.split(local_directory_path)
         if not destination_folder:
@@ -49,7 +54,7 @@ class FolderSyncer(object):
                         )
                         if err != None:
                             self.logger.error(err)
-                            sys.exit(2)
+                            sys.exit(4)
 
         return destination_folder
 
@@ -60,7 +65,7 @@ def main():
     # What are we going to do?
     logger.info(__doc__)
 
-    # Determine some arguments we need for api calls
+    # Determine some arguments we need for API calls
     base_url = common.get_base_url()
     token = common.get_token_from_env()
     if not token:
@@ -75,17 +80,25 @@ def main():
     selector = common.GroupSelector(logger, base_url, token)
     group_id = selector.get_org()
     if not group_id:
-        sys.exit(2)
+        sys.exit(3)
 
-    logger.info("Selected group_id {}".format(group_id))
+    logger.info("Using group_id {}".format(group_id))
 
-    # Pick the mount on which you would like your folder to be uploaded
+    # Select the destination mount to which the source folder will be uploaded
     selector = common.MountSelector(logger, token)
     
-    selected_mount = selector.select_mount(group_id, "Select the mount on which you would like to upload your folder to")
+    mounts, err = selector.get_mounts(group_id)
+    if err != None:
+            logger.error("Failed getting mounts: {}".format(err))
+            sys.exit(4)
+    if len(mounts) < 1:
+        logger.info("No mounts found")
+        sys.exit(5)
+                   
+    selected_mount = selector.select_mount(group_id, "Select the mount on which you would like to upload your folder to", mounts)
     logger.info("Selected mount_id {} ({})".format(selected_mount.id, selected_mount.mount_location))
 
-    destination_folder = input("-- Please provide the path of your local folder to be uploaded (eg. 'upload_test')\n")
+    destination_folder = input("-- Please provide the absolute path of the local source folder\n")
 
     if not os.path.isdir(destination_folder):
         logger.info("'{}' is not a valid folder path".format(destination_folder))
@@ -98,7 +111,7 @@ def main():
     # Upload the folder
     remote_folder_name = folder_syncer.upload_folder_to_athera(selected_mount.id, destination_folder)
 
-    logger.info("Successfully uploaded your folder in athera at the location: '{}'".format(selected_mount.mount_location + "/" + remote_folder_name))
+    logger.info("Successfully uploaded {} to Athera at the location: {}".format(destination_folder, selected_mount.mount_location + "/" + remote_folder_name))
 
     
 

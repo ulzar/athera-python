@@ -70,9 +70,9 @@ def select_region(logger, question):
 
 class MountSelector(object):
     """
-    List the groups available to the authenticated user, and ask for numeric selection.
-    
-    Return the id of that selection.
+    List the mounts found for a particular group, and ask for numeric selection.
+
+    Listed mounts includes those inherited from parent groups.
     """
     def __init__(self, logger, token):
         super(MountSelector, self).__init__()
@@ -80,24 +80,14 @@ class MountSelector(object):
         self.client = sync_client.Client(DEFAULT_REGION, token)
         
 
-    def _get_mounts(self, group_id):
-        """ Get all mounts for the active group
+    def get_mounts(self, group_id):
+        """
+        Get all mounts for the provided group.
         """
         self.logger.info("Getting mounts for group ({})".format(group_id))
+        return self.client.get_mounts(group_id)
 
-        mounts_response, err = self.client.get_mounts(group_id)
-        if err != None:
-            self.logger.error("Failed getting mounts: {}".format(err))
-            sys.exit(2)
-
-        return mounts_response
-
-    def select_mount(self, group_id, question):
-        mounts = self._get_mounts(group_id)
-        if len(mounts) < 1:
-            self.logger.info("You don't have any mounts")
-            sys.exit(2)
-                    
+    def select_mount(self, group_id, question, mounts):
         choices = []
         for mount in mounts:
             choices.append(mount.mount_location)
