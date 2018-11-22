@@ -1,6 +1,8 @@
 import os
 import logging
 import grpc
+from athera.auth.oauth_client import OAuthClient, create_oauth_client
+from athera.auth.decorators import decorate_all_functions, refresh_token_on_expiry
 from athera.sync.sirius.services import service_pb2
 from athera.sync.sirius.services import service_pb2_grpc
 import sys
@@ -15,6 +17,7 @@ REGION_URLS = {
     "australia-southeast1": "australia-southeast1.files.athera.io:443"
 }
 
+@decorate_all_functions(refresh_token_on_expiry)
 class Client(object):
     """
     Client to query the remote grpc file sync service, Sirius.
@@ -23,11 +26,13 @@ class Client(object):
     * Check if token is expired before performing API call. If so, refresh it.
     """
 
-    def __init__(self, region, token):
+    def __init__(self, region, token, refresh_token=None):
         """ 
         'region': The ingress point for the data. Use the region geographically closest to you.
                   Other regions may have to perform a 'rescan' on the mount_id to detect the newly uploaded file.
         'token':  JSON Web Token. See athera.auth.generate_jwt.py on how to generate a JWT.
+        'refresh_token': if not None, we will check, before every api call is performed; that the token is not expired. 
+                         If it is, we will refresh it and update self.token with the new value
         """
         
         self.url = REGION_URLS.get(region)
@@ -38,7 +43,13 @@ class Client(object):
         self.token = token
         channel = grpc.secure_channel(self.url, self.credentials)
         self.stub = service_pb2_grpc.SiriusStub(channel)
-       
+        if refresh_token:
+            self.oauth_client = create_oauth_client()
+            self.refresh_token =  refresh_token
+            if not self.oauth_client :
+                raise ValueError("""Could not create oauth client. Make sure that the following environment variables are properly set:
+- ATHERA_API_CLIENT_ID
+- ATHERA_API_CLIENT_SECRET""")
 
     def get_mounts(self, group_id):
         """

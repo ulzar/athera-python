@@ -178,5 +178,21 @@ class OAuthClient(object):
     def token_updated(self, token):
         self.logger.info("Token updated!")
         #self.token_update_callback(token)
+
+def create_oauth_client():
+    client_id = os.getenv("ATHERA_API_CLIENT_ID")
+    client_secret = os.getenv("ATHERA_API_CLIENT_SECRET")
+
+    if not client_id:
+        logging.error("ATHERA_API_CLIENT_ID is not set")
+        return None
+    if not client_secret:
+        logging.error("ATHERA_API_CLIENT_SECRET is not set")
+        return None
         
-        
+    return OAuthClient(
+        client_id, 
+        client_secret,
+        os.getenv("ATHERA_API_IDP_URL", "https://id.athera.io/"), 
+        os.getenv("ATHERA_API_IDP_AUDIENCE", "https://public.athera.io")
+    )

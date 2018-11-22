@@ -38,6 +38,11 @@ def get_token_from_env():
     """
     return os.getenv("ATHERA_API_TOKEN")
 
+def get_refresh_token_from_env():
+    """
+    See README.md for details on creating a token
+    """
+    return os.getenv("ATHERA_API_REFRESH_TOKEN")
 
 def get_base_url():
     """ 
