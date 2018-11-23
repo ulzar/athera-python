@@ -12,7 +12,9 @@ from datetime import datetime
 from six.moves import input
 
 from athera.api import groups
+from athera.sync import client as sync_client
 
+DEFAULT_REGION = "europe-west1"
 
 def setup_logging():
     """
@@ -63,6 +65,36 @@ def select_region(logger, question):
     choices = ("europe-west1", "us-west1", "australia-southeast1")
     region_index_unused, region_name = SelectionHelper(logger, choices, question)()
     return region_name
+
+
+
+class MountSelector(object):
+    """
+    List the mounts found for a particular group, and ask for numeric selection.
+
+    Listed mounts includes those inherited from parent groups.
+    """
+    def __init__(self, logger, token):
+        super(MountSelector, self).__init__()
+        self.logger = logger
+        self.client = sync_client.Client(DEFAULT_REGION, token)
+        
+
+    def get_mounts(self, group_id):
+        """
+        Get all mounts for the provided group.
+        """
+        self.logger.info("Getting mounts for group ({})".format(group_id))
+        return self.client.get_mounts(group_id)
+
+    def select_mount(self, group_id, question, mounts):
+        choices = []
+        for mount in mounts:
+            choices.append(mount.mount_location)
+
+        mount_index_unused, mount_location_name = SelectionHelper(self.logger, choices, question)()
+        return mounts[mount_index_unused]
+
 
 
 class GroupSelector(object):

@@ -64,9 +64,9 @@ class Client(object):
             return mountsResponse.mounts, None
         except grpc.RpcError as e:
             logging.debug("grpc.RpcError %s", e)
-            return None, e
+            return [], e
         except AttributeError as e:
-            return None, e
+            return [], e
 
     def get_files(self, group_id, mount_id, path="/"):
         """
