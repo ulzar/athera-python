@@ -9,7 +9,7 @@ import uuid
 from settings import environment, compute_arguments
 
 
-class ClientTest(unittest.TestCase):
+class SyncTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
