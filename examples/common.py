@@ -220,7 +220,15 @@ class TokenHelper(object):
     def __init__(self, token):
         super(TokenHelper, self).__init__()
         header, payload, signature = token.split(".")
-        self.decoded = json.loads(base64.b64decode(payload).decode("utf-8"))
+
+        # https://stackoverflow.com/questions/2941995/python-ignore-incorrect-padding-error-when-base64-decoding
+        missing_padding = len(payload) % 4
+        if missing_padding:
+            payload += '=' * (4 - missing_padding)
+
+        decodedutf8 = base64.b64decode(payload)
+        decodedjson = decodedutf8.decode("utf-8")
+        self.decoded = json.loads(decodedjson)
 
     def get_user_id(self):
         """ 
