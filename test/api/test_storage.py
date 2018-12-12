@@ -64,7 +64,7 @@ class StorageTest(unittest.TestCase):
                 client_secret=environment.ATHERA_API_TEST_GCS_CLIENT_SECRET,
             ),
         )
-        self.assertEqual(response.status_code, codes.ok)
+        self.assertEqual(response.status_code, codes.created)
         driver = response.json()
         self.assertEqual(driver["name"], fake_name)
         self.assertEqual(driver["type"], "GCS")
