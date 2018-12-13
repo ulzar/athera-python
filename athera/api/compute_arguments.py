@@ -25,7 +25,7 @@ def get_katana_arguments(render_node):
         "{{FRAME_RANGE_START}}-{{FRAME_RANGE_FINISH}}"
     ]
 
-def get_modo_argements():
+def get_modo_arguments():
     return [
         "{{FILE_PATH}}",
         "default", # Output location not used, setting to default
