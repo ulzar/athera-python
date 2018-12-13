@@ -18,14 +18,17 @@ Windows users should be able to improvise by setting the environment variables d
 
 Running the script provides a URL which when clicked, or pasted into a browser, walks you through the OAuth process. The script outputs a JWT token.
 
-Generating a token needs to be done only once, then when the token expires. Tokens can be refreshed to prevent expiry. See the auth.generate_py.refresh_token function for details on how to do this.
+Generating a token needs to be done only once, then when the token expires. Tokens can be refreshed to prevent expiry. See the `athera.auth.generate_py.refresh_token` function for details on how to do this.
 
 ## Using Athera Python
 To use the Athera API python wrappers in your own projects, add the following to your python requirements file and install into your virtualenv:
 
 ```
+git+git://github.com/athera-io/athera-python.git@master
+six
 requests
-git+git://github.com/athera-io/athera-python.git@v0.1
+grpcio
+protobuf
 ```
 
 You should then be able to do, for example:
@@ -41,11 +44,27 @@ base_url is a constant:
 
 It is provided as an argument to function calls to allow for future flexibility.
 
+## File sync
+Data I/O between local storage and Athera storage is now possible. The Athera Sync API uses [gRPC](https://grpc.io/) to perform bi-directional data transfer.
+
+We provide a Sync client in `athera.sync.client` which you should use to manage transfers. This client requires the JWT as above, plus also a region string, one of:
+
+* `us-west1`
+* `europe-west1`
+* `australia-southeast1`
+
+### Why is a region required?
+When you perform an upload, the uploaded file gets automatically cached into the target region. It will eventually get written into the external storage bucket, if applicable. Other regions need to do a storage rescan operation to detect the newly arrived file.
+
+You can actually use Athera Sync API to upload to or download from your own buckets that you've connected to Athera!
+
 ## Examples
 See the examples folder for a few simple scripts which use the api to query your Athera contexts. The examples folder has its own requirements.txt.
 
-## File sync
-Data I/O between local storage and Athera storage is in progress and will be added in a future release.
+## Tests
+An alternative source of implementation specifics is the test folder. You'll be unlikely to be able (or want to) run the tests as many environment variables are required (see `athera-python/.test.settings`).
+
+The tests are used by us to check for regressions and core Athera functionality, but are provided here for your reference.
 
 ## Contributions
 Contributions are very welcome. Email contact@athera.io to be granted write access to the repository.
