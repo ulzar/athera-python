@@ -300,7 +300,7 @@ class ComputeTest(unittest.TestCase):
             time.sleep(5)
         
         # Wait until job status is ABORTED. This can take a while because if vm provisioning began, we have to wait for it to be READY to turn it off.
-        error_msg = self.wait_for_job_status(job_id, "ABORTED", 600)
+        error_msg = self.wait_for_job_status(job_id, "CANCELED", 600)
         self.assertIsNone(error_msg, error_msg)
 
     def wait_for_job_status(self, job_id, desired_status, timeout=60):
