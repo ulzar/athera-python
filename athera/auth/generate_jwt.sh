@@ -1,4 +1,5 @@
-export PYTHON_VERSION=python3.7
+export PYTHON_VERSION=python3
+export PYTHONPATH=$(pwd)/../..
 
 $PYTHON_VERSION -m venv venv
 source venv/bin/activate
