@@ -34,7 +34,7 @@ class StorageTest(unittest.TestCase):
         response = storage.get_driver(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             environment.ATHERA_API_TEST_GROUP_DRIVER_ID,
         )
         self.assertEqual(response.status_code, codes.ok)
@@ -103,7 +103,7 @@ class StorageTest(unittest.TestCase):
         response = storage.rescan_driver(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             driver_id,
             "/"
         )
@@ -131,7 +131,7 @@ class StorageTest(unittest.TestCase):
         response = storage.rescan_driver(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             driver_id,
             "path/must/start/with/root/lol"
         )
@@ -139,16 +139,16 @@ class StorageTest(unittest.TestCase):
 
     def test_rescan_driver_subfolder(self):
         """ Positive test - Rescans a subfolder """
-        driver_id = environment.ATHERA_API_TEST_GROUP_DRIVER_ID
+        driver_id = environment.ATHERA_API_TEST_GCP_DRIVER_ID
         status = self.get_driver_indexing_status(driver_id)
         self.assertEqual(status['indexingInProgress'], False)
         
         response = storage.rescan_driver(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             driver_id,
-            "/toto/tata"
+            environment.ATHERA_API_TEST_GCP_DRIVER_SUBFOLDER
         )
         self.assertEqual(response.status_code, codes.ok)
         # Wait for rescan to finish and checks for rescan path to equals "/"
@@ -158,7 +158,7 @@ class StorageTest(unittest.TestCase):
         while timeout > 0:
             status = self.get_driver_indexing_status(driver_id)
             if status['indexingInProgress'] == False:
-                self.assertEqual(status['path'], "/toto/tata")
+                self.assertEqual(status['path'], environment.ATHERA_API_TEST_GCP_DRIVER_SUBFOLDER)
                 break
             time.sleep(interval)        
             timeout -= interval
@@ -167,14 +167,14 @@ class StorageTest(unittest.TestCase):
 
     def test_dropcache_driver(self):
         """ Positive test - List the mounts the authenticated user has in this group """
-        driver_id = environment.ATHERA_API_TEST_GROUP_DRIVER_ID
+        driver_id = environment.ATHERA_API_TEST_HOME_DRIVER_ID
         status = self.get_driver_indexing_status(driver_id)
-        self.assertEqual(status, False)
+        self.assertEqual(status['indexingInProgress'], False)
         
         response = storage.dropcache_driver(
             environment.ATHERA_API_TEST_BASE_URL,
             environment.ATHERA_API_TEST_GROUP_ID,
-            environment.ATHERA_API_TEST_TOKEN,
+            self.token,
             driver_id,
         )
         self.assertEqual(response.status_code, codes.ok)
@@ -189,7 +189,6 @@ class StorageTest(unittest.TestCase):
         )
         self.assertEqual(response.status_code, codes.ok)
         data = response.json()
-        # print (data)
         self.assertEqual(data["type"], "GCS") # This is only guaranteed if using GROUP_DRIVER
         statuses = data["statuses"]
         self.assertNotEqual(len(statuses), 0)
