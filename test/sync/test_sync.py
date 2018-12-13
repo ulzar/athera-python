@@ -16,8 +16,7 @@ class SyncTest(unittest.TestCase):
         cls.token = os.getenv("ATHERA_API_TEST_TOKEN")
         if not cls.token:
             raise ValueError("ATHERA_API_TEST_TOKEN environment variable must be set")
-        url = environment.ATHERA_API_TEST_REGION
-        cls.client = Client(url, cls.token)
+        cls.client = Client(environment.ATHERA_API_TEST_REGION, cls.token)
 
     def test_get_mounts(self):
         """ Test we can get groups for the authenticated user.
