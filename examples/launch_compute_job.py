@@ -100,30 +100,30 @@ def main():
     token = common.get_token_from_env()
     if not token:
         logger.fatal("ATHERA_API_TOKEN not set in env")
-        sys.exit(1)
+        return 1
 
     # API calls all need an active group to define the 'Context' of the request. In this case, ask the user for a group, starting with Orgs and walking the context tree
     selector = common.GroupSelector(logger, base_url, token)
     org_id = selector.get_org()
     if not org_id:
         logger.fatal("Failed to get Org")
-        sys.exit(2)
+        return 2
     
     leaf_group_id = selector.get_leaf_group(org_id)
     if not leaf_group_id:
         logger.fatal("Failed to get leaf group")
-        sys.exit(3)
+        return 3
 
     # Check provided app ID is valid and available for the selected org - The response is based on active entitlements, so we provide the Org ID, not the child group ID.
     if not validate_app(logger, base_url, org_id, token, NUKE_COMPUTE_APP_ID):
         logger.fatal("Validate app failed")
-        sys.exit(4)
+        return 4
 
     # Check the user has a dropbox mount
     dropbox_driver = check_dropbox_connected(logger, base_url, leaf_group_id, token)
     if not dropbox_driver:
         logger.fatal("Dropbox not connected?")
-        sys.exit(5)
+        return 5
 
     logger.info("Found a dropbox driver with id {}".format(dropbox_driver['id']))
     
@@ -135,5 +135,5 @@ def main():
 
 
 if __name__=="__main__":
-    main()
-
+    exit_code = main()
+    sys.exit(exit_code)
