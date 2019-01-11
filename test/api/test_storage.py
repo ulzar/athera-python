@@ -94,90 +94,90 @@ class StorageTest(unittest.TestCase):
         self.assertEqual(mount["type"], "MountTypeGroupCustom")
         self.assertEqual(mount["name"], fake_name)
 
-    def test_rescan_driver_root(self):
-        """ Positive test - Rescans the entire driver """
-        driver_id = environment.ATHERA_API_TEST_GROUP_DRIVER_ID
-        status = self.get_driver_indexing_status(driver_id)
-        self.assertEqual(status['indexingInProgress'], False)
+    # def test_rescan_driver_root(self):
+    #     """ Positive test - Rescans the entire driver """
+    #     driver_id = environment.ATHERA_API_TEST_GROUP_DRIVER_ID
+    #     status = self.get_driver_indexing_status(driver_id)
+    #     self.assertEqual(status['indexingInProgress'], False)
         
-        response = storage.rescan_driver(
-            environment.ATHERA_API_TEST_BASE_URL,
-            environment.ATHERA_API_TEST_GROUP_ID,
-            self.token,
-            driver_id,
-            "/"
-        )
-        self.assertEqual(response.status_code, codes.ok)
-        # Wait for rescan to finish and checks for rescan path to equals "/"
-        timeout = 600
-        interval = 2
-        time.sleep(interval) #Wait for PandoraWorker to launch the task
-        while timeout > 0:
-            status = self.get_driver_indexing_status(driver_id)
-            if status['indexingInProgress'] == False:
-                self.assertEqual(status['path'], "/")
-                break
-            time.sleep(interval)        
-            timeout -= interval
-            print("Still in progress ...")
-        self.assertGreater(timeout, 0)
+    #     response = storage.rescan_driver(
+    #         environment.ATHERA_API_TEST_BASE_URL,
+    #         environment.ATHERA_API_TEST_GROUP_ID,
+    #         self.token,
+    #         driver_id,
+    #         "/"
+    #     )
+    #     self.assertEqual(response.status_code, codes.ok)
+    #     # Wait for rescan to finish and checks for rescan path to equals "/"
+    #     timeout = 600
+    #     interval = 2
+    #     time.sleep(interval) #Wait for PandoraWorker to launch the task
+    #     while timeout > 0:
+    #         status = self.get_driver_indexing_status(driver_id)
+    #         if status['indexingInProgress'] == False:
+    #             self.assertEqual(status['path'], "/")
+    #             break
+    #         time.sleep(interval)        
+    #         timeout -= interval
+    #         print("Still in progress ...")
+    #     self.assertGreater(timeout, 0)
 
-    def test_rescan_driver_broken_path(self):
-        """ Error test - Rescans request has wrong path argument """
-        driver_id = environment.ATHERA_API_TEST_GROUP_DRIVER_ID
-        status = self.get_driver_indexing_status(driver_id)
-        self.assertEqual(status['indexingInProgress'], False)
+    # def test_rescan_driver_broken_path(self):
+    #     """ Error test - Rescans request has wrong path argument """
+    #     driver_id = environment.ATHERA_API_TEST_GROUP_DRIVER_ID
+    #     status = self.get_driver_indexing_status(driver_id)
+    #     self.assertEqual(status['indexingInProgress'], False)
 
-        response = storage.rescan_driver(
-            environment.ATHERA_API_TEST_BASE_URL,
-            environment.ATHERA_API_TEST_GROUP_ID,
-            self.token,
-            driver_id,
-            "path/must/start/with/root/lol"
-        )
-        self.assertEqual(response.status_code, codes.bad_request)
+    #     response = storage.rescan_driver(
+    #         environment.ATHERA_API_TEST_BASE_URL,
+    #         environment.ATHERA_API_TEST_GROUP_ID,
+    #         self.token,
+    #         driver_id,
+    #         "path/must/start/with/root/lol"
+    #     )
+    #     self.assertEqual(response.status_code, codes.bad_request)
 
-    def test_rescan_driver_subfolder(self):
-        """ Positive test - Rescans a subfolder """
-        driver_id = environment.ATHERA_API_TEST_GCP_DRIVER_ID
-        status = self.get_driver_indexing_status(driver_id)
-        self.assertEqual(status['indexingInProgress'], False)
+    # def test_rescan_driver_subfolder(self):
+    #     """ Positive test - Rescans a subfolder """
+    #     driver_id = environment.ATHERA_API_TEST_GCP_DRIVER_ID
+    #     status = self.get_driver_indexing_status(driver_id)
+    #     self.assertEqual(status['indexingInProgress'], False)
         
-        response = storage.rescan_driver(
-            environment.ATHERA_API_TEST_BASE_URL,
-            environment.ATHERA_API_TEST_GROUP_ID,
-            self.token,
-            driver_id,
-            environment.ATHERA_API_TEST_GCP_DRIVER_SUBFOLDER
-        )
-        self.assertEqual(response.status_code, codes.ok)
-        # Wait for rescan to finish and checks for rescan path to equals "/"
-        timeout = 600
-        interval = 2
-        time.sleep(interval) #Wait for PandoraWorker to launch the task
-        while timeout > 0:
-            status = self.get_driver_indexing_status(driver_id)
-            if status['indexingInProgress'] == False:
-                self.assertEqual(status['path'], environment.ATHERA_API_TEST_GCP_DRIVER_SUBFOLDER)
-                break
-            time.sleep(interval)        
-            timeout -= interval
-            print("Still in progress ...")
-        self.assertGreater(timeout, 0)
+    #     response = storage.rescan_driver(
+    #         environment.ATHERA_API_TEST_BASE_URL,
+    #         environment.ATHERA_API_TEST_GROUP_ID,
+    #         self.token,
+    #         driver_id,
+    #         environment.ATHERA_API_TEST_GCP_DRIVER_SUBFOLDER
+    #     )
+    #     self.assertEqual(response.status_code, codes.ok)
+    #     # Wait for rescan to finish and checks for rescan path to equals "/"
+    #     timeout = 600
+    #     interval = 2
+    #     time.sleep(interval) #Wait for PandoraWorker to launch the task
+    #     while timeout > 0:
+    #         status = self.get_driver_indexing_status(driver_id)
+    #         if status['indexingInProgress'] == False:
+    #             self.assertEqual(status['path'], environment.ATHERA_API_TEST_GCP_DRIVER_SUBFOLDER)
+    #             break
+    #         time.sleep(interval)        
+    #         timeout -= interval
+    #         print("Still in progress ...")
+    #     self.assertGreater(timeout, 0)
 
-    def test_dropcache_driver(self):
-        """ Positive test - List the mounts the authenticated user has in this group """
-        driver_id = environment.ATHERA_API_TEST_HOME_DRIVER_ID
-        status = self.get_driver_indexing_status(driver_id)
-        self.assertEqual(status['indexingInProgress'], False)
+    # def test_dropcache_driver(self):
+    #     """ Positive test - List the mounts the authenticated user has in this group """
+    #     driver_id = environment.ATHERA_API_TEST_HOME_DRIVER_ID
+    #     status = self.get_driver_indexing_status(driver_id)
+    #     self.assertEqual(status['indexingInProgress'], False)
         
-        response = storage.dropcache_driver(
-            environment.ATHERA_API_TEST_BASE_URL,
-            environment.ATHERA_API_TEST_GROUP_ID,
-            self.token,
-            driver_id,
-        )
-        self.assertEqual(response.status_code, codes.ok)
+    #     response = storage.dropcache_driver(
+    #         environment.ATHERA_API_TEST_BASE_URL,
+    #         environment.ATHERA_API_TEST_GROUP_ID,
+    #         self.token,
+    #         driver_id,
+    #     )
+    #     self.assertEqual(response.status_code, codes.ok)
 
 
     def get_driver_indexing_status(self, driver_id):
